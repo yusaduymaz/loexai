@@ -6,8 +6,8 @@ type: execute
 wave: 3
 mode: mvp
 depends_on:
-  - 1A   # needs middleware role gate, get-user.ts, lib/supabase
-  - 1B   # needs all 10 tables + ai_usage for admin reader
+  - 01-1A
+  - 01-1B
 parallel_safe_with: []
 files_modified:
   # Dashboard layout & pages

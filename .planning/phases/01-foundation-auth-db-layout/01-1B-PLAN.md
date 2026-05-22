@@ -6,9 +6,9 @@ type: execute
 wave: 2
 mode: mvp
 depends_on:
-  - 1A   # needs Supabase project wired + public.users table from 1A's handle_new_user migration
+  - 01-1A
 parallel_safe_with:
-  - 1C   # 1B touches supabase/, 1C touches src/app/(marketing) + src/app/(auth) — no file overlap
+  - 01-1C
 files_modified:
   - supabase/migrations/<ts>_businesses.sql
   - supabase/migrations/<ts>_pipeline_tables.sql       # business_enrichments, gap_analyses, opportunities, solution_recommendations, sales_strategies, build_prompts

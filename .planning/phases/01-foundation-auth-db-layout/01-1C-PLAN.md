@@ -6,9 +6,9 @@ type: execute
 wave: 2
 mode: mvp
 depends_on:
-  - 1A   # needs Next.js + Tailwind + Supabase client factories + Server Actions
+  - 01-1A
 parallel_safe_with:
-  - 1B   # 1B touches supabase/ + src/types; 1C touches src/app/(marketing) + (auth) + components/landing|auth — no file overlap
+  - 01-1B
 files_modified:
   - src/app/(marketing)/layout.tsx
   - src/app/(marketing)/page.tsx                  # Landing
