@@ -31,10 +31,12 @@ Aşağıdaki kararlar `CLAUDE.md`, `.planning/research/STACK.md` ve `01-CONTEXT.
 
 | Karar | Değer | Kaynak |
 |---|---|---|
-| Framework | Next.js 15+ App Router | CLAUDE.md §10 |
+| Framework | Next.js 14 (App Router) | CLAUDE.md §10 |
 | Language | TypeScript strict (no unjustified `any`) | CLAUDE.md §20 |
 | Package manager | `npm` | Convention; lockfile sabit kalır |
-| Node version | LTS (20.x+) | Next.js 15 gereksinimi |
+| Node version | LTS (20.x+) | Next.js 14 gereksinimi |
+| Next config | `next.config.mjs` (ESM) — Next 14 doesn't support `.ts` config | Stack decision |
+| Geist font | `geist` npm package (`GeistSans` from `geist/font/sans`) — not `next/font/google` (Geist was added in Next 15) | Stack decision |
 | Styling | Tailwind CSS v3 + DESIGN.md token'ları | CLAUDE.md §10, DESIGN.md |
 | UI primitives | shadcn/ui (vendorize edilir) | RESEARCH STACK §5 |
 | Icons | Lucide + Material Symbols Outlined (HTML örneklerinde Material kullanılıyor) | DESIGN.md, tasarimornegi/*.html |

@@ -298,7 +298,7 @@ doğrular, zayıf varsayımları işaretler.
 
 ## 10. Teknoloji Stack'i
 
-**Frontend:** Next.js 15+ (App Router), TypeScript (strict), Tailwind CSS,
+**Frontend:** Next.js 14 (App Router, ESM `next.config.mjs`), TypeScript (strict), Tailwind CSS,
 shadcn/ui, Framer Motion, Lucide Icons, Recharts
 
 **Backend:** Supabase (PostgreSQL, Auth, Storage, Edge Functions), Row Level Security
