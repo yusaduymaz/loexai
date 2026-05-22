@@ -1,0 +1,15 @@
+{
+  "mode": "yolo",
+  "granularity": "standard",
+  "parallelization": true,
+  "commit_docs": true,
+  "model_profile": "budget",
+  "ai_provider_note": "OpenRouter free models preferred (matches CLAUDE.md Section 9 — openrouter_free for dev/test)",
+  "workflow": {
+    "research": true,
+    "plan_check": true,
+    "verifier": true,
+    "nyquist_validation": true,
+    "auto_advance": true
+  }
+}
