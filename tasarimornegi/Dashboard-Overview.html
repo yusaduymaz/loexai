@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en">
+
+<head>
+    <meta charset="utf-8" />
+    <meta content="width=device-width, initial-scale=1.0" name="viewport" />
+    <title>Dashboard Overview | LoexAI</title>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Geist:wght@400;600;700&amp;family=JetBrains+Mono:wght@500&amp;display=swap"
+        rel="stylesheet" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap"
+        rel="stylesheet" />
+    <script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "tertiary": "#bec6e0",
+                        "inverse-primary": "#0054d6",
+                        "background": "#031427",
+                        "tertiary-fixed-dim": "#bec6e0",
+                        "secondary-fixed": "#aeecff",
+                        "primary": "#b3c5ff",
+                        "error-container": "#93000a",
+                        "on-secondary": "#003641",
+                        "tertiary-fixed": "#dae2fd",
+                        "surface-container-lowest": "#000f21",
+                        "surface-container-highest": "#26364a",
+                        "secondary-fixed-dim": "#00d9ff",
+                        "surface-tint": "#b3c5ff",
+                        "inverse-on-surface": "#213145",
+                        "on-surface": "#d3e4fe",
+                        "secondary-container": "#00d9ff",
+                        "inverse-surface": "#d3e4fe",
+                        "on-error-container": "#ffdad6",
+                        "on-background": "#d3e4fe",
+                        "on-tertiary-fixed": "#131b2e",
+                        "on-primary-fixed": "#001849",
+                        "surface-container-low": "#0b1c30",
+                        "surface-bright": "#2a3a4f",
+                        "on-primary": "#002b75",
+                        "on-tertiary-container": "#f7f7ff",
+                        "error": "#ffb4ab",
+                        "surface-variant": "#26364a",
+                        "primary-container": "#0066ff",
+                        "outline": "#8c90a1",
+                        "on-primary-fixed-variant": "#003fa4",
+                        "on-tertiary-fixed-variant": "#3f465c",
+                        "on-primary-container": "#f8f7ff",
+                        "surface-container": "#102034",
+                        "on-tertiary": "#283044",
+                        "surface-dim": "#031427",
+                        "surface-container-high": "#1b2b3f",
+                        "surface": "#031427",
+                        "on-secondary-container": "#005b6c",
+                        "on-error": "#690005",
+                        "on-surface-variant": "#c2c6d8",
+                        "primary-fixed": "#dae1ff",
+                        "primary-fixed-dim": "#b3c5ff",
+                        "secondary": "#aeecff",
+                        "on-secondary-fixed-variant": "#004e5d",
+                        "tertiary-container": "#697188",
+                        "on-secondary-fixed": "#001f26",
+                        "outline-variant": "#424656"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-lg": "24px",
+                        "stack-xl": "48px",
+                        "margin-mobile": "16px",
+                        "margin-desktop": "40px",
+                        "container-max": "1440px",
+                        "stack-md": "16px",
+                        "stack-sm": "8px",
+                        "unit": "4px",
+                        "stack-xs": "4px",
+                        "gutter": "24px"
+                    },
+                    "fontFamily": {
+                        "title-md": ["Geist"],
+                        "headline-lg": ["Geist"],
+                        "headline-lg-mobile": ["Geist"],
+                        "label-caps": ["JetBrains Mono"],
+                        "display-lg": ["Geist"],
+                        "body-lg": ["Geist"],
+                        "body-sm": ["Geist"],
+                        "data-mono": ["JetBrains Mono"]
+                    },
+                    "fontSize": {
+                        "title-md": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "headline-lg": ["32px", { "lineHeight": "40px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+                        "headline-lg-mobile": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "500" }],
+                        "display-lg": ["48px", { "lineHeight": "56px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "body-sm": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+                        "data-mono": ["14px", { "lineHeight": "20px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        .neon-glow {
+            box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+        }
+
+        .neon-border:focus-within {
+            border-color: #00d9ff;
+            box-shadow: 0 0 10px rgba(0, 217, 255, 0.2);
+        }
+    </style>
+</head>
+
+<body class="bg-background text-on-background min-h-screen font-body-lg text-body-lg flex">
+    <!-- SideNavBar -->
+    <nav
+        class="hidden md:flex w-[280px] h-screen fixed left-0 top-0 bg-surface-container-lowest dark:bg-surface-container-lowest border-r border-outline-variant shadow-sm flex-col py-stack-lg z-40">
+        <div class="px-margin-desktop mb-stack-lg flex items-center gap-stack-sm">
+            <span class="material-symbols-outlined text-secondary-fixed-dim text-3xl"
+                style="font-variation-settings: 'FILL' 1;">bubble_chart</span>
+            <div>
+                <h1 class="font-headline-lg text-headline-lg text-primary leading-none tracking-tight">LoexAI</h1>
+                <p class="font-label-caps text-label-caps text-on-surface-variant uppercase mt-1 tracking-widest">
+                    Business Intelligence</p>
+            </div>
+        </div>
+        <div class="flex flex-col flex-grow px-stack-sm gap-stack-xs">
+            <a class="flex items-center gap-stack-md px-stack-md py-3 text-primary font-bold border-l-4 border-primary bg-surface-container-low rounded-r-lg"
+                href="#">
+                <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">dashboard</span>
+                <span class="font-body-lg text-body-lg">Overview</span>
+            </a>
+            <a class="flex items-center gap-stack-md px-stack-md py-3 text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-primary transition-colors active:scale-95 duration-150 rounded-lg border-l-4 border-transparent"
+                href="#">
+                <span class="material-symbols-outlined">search_insights</span>
+                <span class="font-body-lg text-body-lg">Lead Discovery</span>
+            </a>
+            <a class="flex items-center gap-stack-md px-stack-md py-3 text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-primary transition-colors active:scale-95 duration-150 rounded-lg border-l-4 border-transparent"
+                href="#">
+                <span class="material-symbols-outlined">rocket_launch</span>
+                <span class="font-body-lg text-body-lg">Opportunities</span>
+            </a>
+            <a class="flex items-center gap-stack-md px-stack-md py-3 text-on-surface-variant font-medium hover:bg-surface-container-high hover:text-primary transition-colors active:scale-95 duration-150 rounded-lg border-l-4 border-transparent mt-auto"
+                href="#">
+                <span class="material-symbols-outlined">settings</span>
+                <span class="font-body-lg text-body-lg">Settings</span>
+            </a>
+        </div>
+        <div class="px-stack-lg mt-stack-lg">
+            <button
+                class="w-full py-3 bg-gradient-to-r from-primary-container to-secondary-container text-on-primary-container rounded-lg font-title-md text-title-md shadow-[0_0_15px_rgba(0,102,255,0.3)] hover:opacity-90 transition-opacity active:scale-95">
+                Upgrade to Pro
+            </button>
+        </div>
+    </nav>
+    <!-- Main Content Area -->
+    <div class="flex-grow md:ml-[280px] flex flex-col min-h-screen">
+        <!-- TopAppBar -->
+        <header
+            class="h-16 fixed top-0 right-0 left-0 md:left-[280px] z-50 bg-surface dark:bg-surface border-b border-outline-variant shadow-sm flex items-center justify-between px-margin-mobile md:px-margin-desktop transition-all duration-200">
+            <!-- Mobile Menu & Title -->
+            <div class="flex items-center gap-stack-md md:hidden">
+                <button class="text-on-surface-variant hover:text-primary p-2">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <span class="font-title-md text-title-md text-primary">LoexAI</span>
+            </div>
+            <!-- Desktop Title (Hidden on mobile as it's in sidebar) -->
+            <div class="hidden md:block">
+                <span class="font-title-md text-title-md text-on-background">Dashboard</span>
+            </div>
+            <div class="flex items-center gap-stack-lg">
+                <!-- Global Search -->
+                <div
+                    class="hidden md:flex items-center bg-surface-container rounded-full px-4 py-2 w-64 border border-outline-variant neon-border transition-all">
+                    <span class="material-symbols-outlined text-on-surface-variant mr-2 text-sm">search</span>
+                    <input
+                        class="bg-transparent border-none focus:ring-0 text-body-sm font-body-sm text-on-surface placeholder-on-surface-variant w-full p-0"
+                        placeholder="Search data..." type="text" />
+                </div>
+                <div class="flex items-center gap-stack-xs">
+                    <button
+                        class="p-2 text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-all active:opacity-80">
+                        <span class="material-symbols-outlined">notifications</span>
+                    </button>
+                    <button
+                        class="p-2 text-on-surface-variant hover:bg-surface-container-highest rounded-full transition-all active:opacity-80 hidden md:block">
+                        <span class="material-symbols-outlined">help</span>
+                    </button>
+                </div>
+                <div
+                    class="w-8 h-8 rounded-full bg-gradient-to-br from-primary to-secondary p-[2px] cursor-pointer hover:shadow-[0_0_10px_rgba(174,236,255,0.5)] transition-all">
+                    <img alt="User Profile Avatar"
+                        class="w-full h-full rounded-full object-cover border-2 border-surface"
+                        data-alt="A close-up studio portrait of a professional individual looking slightly off-camera. The lighting is moody and cinematic, featuring subtle cool blue and neon rim lights that evoke a modern, high-tech corporate atmosphere. The background is a deep, dark navy gradient, blending seamlessly with the corporate modern tech-edge aesthetic of the UI. The subject exudes confidence and focus, perfectly aligning with a premium artificial intelligence business platform."
+                        src="https://lh3.googleusercontent.com/aida-public/AB6AXuAXdYiGXt8fuXwy-rRuMo2BjiVc0459tpUTiHGjGmCtBimOTzUcEemkf_2Ogt7HL3tPqxF05cyaSh3C5URtDrBUkhM-_orO10bIO4w0NGwWwwe6U4NaiYRpASaib7K6l49UZz24aqLaZTtTRR-xRztALhKJLGx9FNHimYzZMmi3D-7XmA3bUHjmhCvGnyx7oWr6mSOKKmNQy94OWbZvj7MIt-AkDLCsDpdZHS0Mh0p1fRg708sTtb3KvJTjUwteZSTJC3YSbt48TrUo" />
+                </div>
+            </div>
+        </header>
+        <!-- Canvas -->
+        <main
+            class="pt-[88px] px-margin-mobile md:px-margin-desktop pb-stack-xl max-w-[1600px] w-full mx-auto flex-grow flex flex-col gap-stack-xl">
+            <!-- Metrics Bento Grid -->
+            <section>
+                <div class="flex items-center justify-between mb-stack-md">
+                    <h2
+                        class="font-headline-lg-mobile md:font-headline-lg text-headline-lg-mobile md:text-headline-lg text-on-background">
+                        Overview</h2>
+                    <span
+                        class="font-label-caps text-label-caps text-on-surface-variant bg-surface-container px-3 py-1 rounded-full border border-outline-variant">LAST
+                        30 DAYS</span>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-gutter">
+                    <!-- Metric Card 1 -->
+                    <div
+                        class="bg-surface-container-low border border-outline-variant rounded-xl p-stack-lg relative overflow-hidden group hover:border-secondary-fixed-dim transition-colors duration-300">
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-secondary-fixed-dim/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-secondary-fixed-dim/10 transition-all">
+                        </div>
+                        <div class="flex justify-between items-start mb-stack-md">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant group-hover:border-secondary-fixed-dim/50 transition-colors">
+                                <span class="material-symbols-outlined text-secondary-fixed-dim">groups</span>
+                            </div>
+                            <div
+                                class="flex items-center text-secondary font-data-mono text-data-mono bg-secondary/10 px-2 py-1 rounded-full">
+                                <span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>
+                                +12.5%
+                            </div>
+                        </div>
+                        <h3 class="font-body-sm text-body-sm text-on-surface-variant mb-1">Total Leads</h3>
+                        <p class="font-display-lg text-display-lg text-on-background font-data-mono">1,284</p>
+                    </div>
+                    <!-- Metric Card 2 -->
+                    <div
+                        class="bg-surface-container-low border border-outline-variant rounded-xl p-stack-lg relative overflow-hidden group hover:border-secondary-fixed-dim transition-colors duration-300">
+                        <div
+                            class="absolute top-0 right-0 w-32 h-32 bg-primary/5 rounded-full blur-2xl -mr-10 -mt-10 group-hover:bg-primary/10 transition-all">
+                        </div>
+                        <div class="flex justify-between items-start mb-stack-md">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant group-hover:border-secondary-fixed-dim/50 transition-colors">
+                                <span class="material-symbols-outlined text-secondary-fixed-dim">target</span>
+                            </div>
+                            <div
+                                class="flex items-center text-secondary font-data-mono text-data-mono bg-secondary/10 px-2 py-1 rounded-full">
+                                <span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>
+                                +8.2%
+                            </div>
+                        </div>
+                        <h3 class="font-body-sm text-body-sm text-on-surface-variant mb-1">High Opportunity</h3>
+                        <p class="font-display-lg text-display-lg text-on-background font-data-mono">342</p>
+                    </div>
+                    <!-- Metric Card 3 -->
+                    <div
+                        class="bg-surface-container-low border border-outline-variant rounded-xl p-stack-lg relative overflow-hidden group hover:border-secondary-fixed-dim transition-colors duration-300">
+                        <div class="flex justify-between items-start mb-stack-md">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant group-hover:border-secondary-fixed-dim/50 transition-colors">
+                                <span class="material-symbols-outlined text-secondary-fixed-dim">analytics</span>
+                            </div>
+                            <div
+                                class="flex items-center text-error font-data-mono text-data-mono bg-error-container/20 px-2 py-1 rounded-full">
+                                <span class="material-symbols-outlined text-[16px] mr-1">trending_down</span>
+                                -1.4%
+                            </div>
+                        </div>
+                        <h3 class="font-body-sm text-body-sm text-on-surface-variant mb-1">Avg Score</h3>
+                        <p class="font-display-lg text-display-lg text-on-background font-data-mono">78<span
+                                class="text-title-md text-on-surface-variant">%</span></p>
+                    </div>
+                    <!-- Metric Card 4 -->
+                    <div
+                        class="bg-surface-container-low border border-outline-variant rounded-xl p-stack-lg relative overflow-hidden group hover:border-secondary-fixed-dim transition-colors duration-300 lg:col-span-1 md:col-span-2">
+                        <div class="flex justify-between items-start mb-stack-md">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant group-hover:border-secondary-fixed-dim/50 transition-colors">
+                                <span class="material-symbols-outlined text-secondary-fixed-dim">attach_money</span>
+                            </div>
+                            <div
+                                class="flex items-center text-secondary font-data-mono text-data-mono bg-secondary/10 px-2 py-1 rounded-full">
+                                <span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>
+                                +24.0%
+                            </div>
+                        </div>
+                        <h3 class="font-body-sm text-body-sm text-on-surface-variant mb-1">Revenue Potential</h3>
+                        <p class="font-display-lg text-display-lg text-on-background font-data-mono"><span
+                                class="text-title-md text-on-surface-variant mr-1">$</span>450<span
+                                class="text-title-md text-on-surface-variant ml-1">k</span></p>
+                    </div>
+                    <!-- Metric Card 5 -->
+                    <div
+                        class="bg-surface-container-low border border-outline-variant rounded-xl p-stack-lg relative overflow-hidden group hover:border-secondary-fixed-dim transition-colors duration-300">
+                        <div class="flex justify-between items-start mb-stack-md">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant group-hover:border-secondary-fixed-dim/50 transition-colors">
+                                <span class="material-symbols-outlined text-secondary-fixed-dim">psychology</span>
+                            </div>
+                            <div
+                                class="flex items-center text-secondary font-data-mono text-data-mono bg-secondary/10 px-2 py-1 rounded-full">
+                                <span class="material-symbols-outlined text-[16px] mr-1">trending_up</span>
+                                +4.1%
+                            </div>
+                        </div>
+                        <h3 class="font-body-sm text-body-sm text-on-surface-variant mb-1">AI Strategies Generated</h3>
+                        <p class="font-display-lg text-display-lg text-on-background font-data-mono">156</p>
+                    </div>
+                    <!-- Metric Card 6 -->
+                    <div
+                        class="bg-surface-container-low border border-outline-variant rounded-xl p-stack-lg relative overflow-hidden group hover:border-secondary-fixed-dim transition-colors duration-300">
+                        <div class="flex justify-between items-start mb-stack-md">
+                            <div
+                                class="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center border border-outline-variant group-hover:border-secondary-fixed-dim/50 transition-colors">
+                                <span class="material-symbols-outlined text-secondary-fixed-dim">terminal</span>
+                            </div>
+                            <div
+                                class="flex items-center text-on-surface-variant font-data-mono text-data-mono bg-surface-container-high px-2 py-1 rounded-full border border-outline-variant">
+                                <span class="material-symbols-outlined text-[16px] mr-1">horizontal_rule</span>
+                                0.0%
+                            </div>
+                        </div>
+                        <h3 class="font-body-sm text-body-sm text-on-surface-variant mb-1">Build Prompts</h3>
+                        <p class="font-display-lg text-display-lg text-on-background font-data-mono">89</p>
+                    </div>
+                </div>
+            </section>
+            <!-- Data Table Section -->
+            <section
+                class="bg-surface-container-low border border-outline-variant rounded-xl shadow-lg overflow-hidden flex flex-col">
+                <div
+                    class="p-stack-lg border-b border-outline-variant flex flex-col sm:flex-row sm:items-center justify-between gap-stack-md bg-surface-container-highest/30">
+                    <div>
+                        <h2 class="font-title-md text-title-md text-on-background flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary text-[20px]">electric_bolt</span>
+                            Recent Opportunities
+                        </h2>
+                        <p class="font-body-sm text-body-sm text-on-surface-variant mt-1">High-value leads requiring
+                            immediate attention.</p>
+                    </div>
+                    <button
+                        class="px-4 py-2 border border-outline-variant text-on-surface-variant hover:text-primary hover:border-primary rounded-lg font-body-sm text-body-sm transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[18px]">filter_list</span> Filter
+                    </button>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="border-b border-outline-variant bg-surface-container/50">
+                                <th class="py-4 px-stack-lg font-label-caps text-label-caps text-on-surface-variant">
+                                    Business Name</th>
+                                <th class="py-4 px-stack-lg font-label-caps text-label-caps text-on-surface-variant">
+                                    Category</th>
+                                <th
+                                    class="py-4 px-stack-lg font-label-caps text-label-caps text-on-surface-variant text-center">
+                                    Score</th>
+                                <th class="py-4 px-stack-lg font-label-caps text-label-caps text-on-surface-variant">
+                                    Status</th>
+                                <th
+                                    class="py-4 px-stack-lg font-label-caps text-label-caps text-on-surface-variant text-right">
+                                    Action</th>
+                            </tr>
+                        </thead>
+                        <tbody class="font-body-sm text-body-sm divide-y divide-outline-variant/50">
+                            <!-- Row 1 -->
+                            <tr class="hover:bg-surface-container-high/50 transition-colors group">
+                                <td class="py-4 px-stack-lg font-medium text-on-background flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded bg-primary-container/20 text-primary-container flex items-center justify-center font-bold text-xs">
+                                        NL</div>
+                                    Nova Logistics
+                                </td>
+                                <td class="py-4 px-stack-lg text-on-surface-variant">Supply Chain</td>
+                                <td class="py-4 px-stack-lg text-center">
+                                    <span
+                                        class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-secondary-fixed-dim/20 border border-secondary-fixed-dim/30 text-secondary-fixed-dim font-data-mono text-xs w-14">
+                                        94
+                                    </span>
+                                </td>
+                                <td class="py-4 px-stack-lg">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-primary-container/10 border border-primary-container/30 text-primary font-body-sm text-xs">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+                                        Analyzing
+                                    </span>
+                                </td>
+                                <td class="py-4 px-stack-lg text-right">
+                                    <button
+                                        class="text-on-surface-variant hover:text-secondary-fixed-dim p-1 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Row 2 -->
+                            <tr class="hover:bg-surface-container-high/50 transition-colors group">
+                                <td class="py-4 px-stack-lg font-medium text-on-background flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded bg-tertiary-container/20 text-tertiary-container flex items-center justify-center font-bold text-xs">
+                                        AE</div>
+                                    Apex E-Commerce
+                                </td>
+                                <td class="py-4 px-stack-lg text-on-surface-variant">Retail Tech</td>
+                                <td class="py-4 px-stack-lg text-center">
+                                    <span
+                                        class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-secondary-fixed-dim/20 border border-secondary-fixed-dim/30 text-secondary-fixed-dim font-data-mono text-xs w-14">
+                                        88
+                                    </span>
+                                </td>
+                                <td class="py-4 px-stack-lg">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-highest border border-outline-variant text-on-surface-variant font-body-sm text-xs">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span> Pending
+                                    </span>
+                                </td>
+                                <td class="py-4 px-stack-lg text-right">
+                                    <button
+                                        class="text-on-surface-variant hover:text-secondary-fixed-dim p-1 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Row 3 -->
+                            <tr class="hover:bg-surface-container-high/50 transition-colors group">
+                                <td class="py-4 px-stack-lg font-medium text-on-background flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded bg-secondary-container/20 text-secondary-container flex items-center justify-center font-bold text-xs">
+                                        SH</div>
+                                    Synergy Health
+                                </td>
+                                <td class="py-4 px-stack-lg text-on-surface-variant">Healthcare</td>
+                                <td class="py-4 px-stack-lg text-center">
+                                    <span
+                                        class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-surface-container-highest border border-outline-variant text-on-surface-variant font-data-mono text-xs w-14">
+                                        62
+                                    </span>
+                                </td>
+                                <td class="py-4 px-stack-lg">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-surface-container-highest border border-outline-variant text-on-surface-variant font-body-sm text-xs">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-outline-variant"></span> Nurturing
+                                    </span>
+                                </td>
+                                <td class="py-4 px-stack-lg text-right">
+                                    <button
+                                        class="text-on-surface-variant hover:text-secondary-fixed-dim p-1 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                                    </button>
+                                </td>
+                            </tr>
+                            <!-- Row 4 -->
+                            <tr class="hover:bg-surface-container-high/50 transition-colors group">
+                                <td class="py-4 px-stack-lg font-medium text-on-background flex items-center gap-3">
+                                    <div
+                                        class="w-8 h-8 rounded bg-error-container/20 text-error flex items-center justify-center font-bold text-xs">
+                                        VQ</div>
+                                    Vanguard Quant
+                                </td>
+                                <td class="py-4 px-stack-lg text-on-surface-variant">Financial Services</td>
+                                <td class="py-4 px-stack-lg text-center">
+                                    <span
+                                        class="inline-flex items-center justify-center px-2 py-1 rounded-full bg-secondary-fixed-dim/20 border border-secondary-fixed-dim/30 text-secondary-fixed-dim font-data-mono text-xs w-14">
+                                        91
+                                    </span>
+                                </td>
+                                <td class="py-4 px-stack-lg">
+                                    <span
+                                        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-error-container/20 border border-error/30 text-error font-body-sm text-xs">
+                                        <span class="w-1.5 h-1.5 rounded-full bg-error"></span> Urgent Action
+                                    </span>
+                                </td>
+                                <td class="py-4 px-stack-lg text-right">
+                                    <button
+                                        class="text-on-surface-variant hover:text-secondary-fixed-dim p-1 transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100">
+                                        <span class="material-symbols-outlined text-[20px]">arrow_forward</span>
+                                    </button>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+</body>
+
+</html>
