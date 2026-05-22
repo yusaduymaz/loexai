@@ -9,7 +9,7 @@ out/
 build/
 dist/
 
-# Production
+# TypeScript
 *.tsbuildinfo
 next-env.d.ts
 

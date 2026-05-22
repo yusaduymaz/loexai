@@ -1,0 +1,92 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/*
+ * DESIGN.md token'ları — CSS değişkenleri olarak hem Tailwind'in dışındaki
+ * tüketiciler (shadcn primitives, raw style attribute kullanan komponentler,
+ * Framer Motion animation'ları) için erişilebilir tutulur.
+ *
+ * Tailwind tarafında aynı değerler `tailwind.config.ts` içinde colors map'ine
+ * yazıldı — iki tarafta da birebir aynı hex değerleri.
+ */
+@layer base {
+  :root {
+    /* Surface tiers */
+    --surface: #031427;
+    --surface-dim: #031427;
+    --surface-bright: #2a3a4f;
+    --surface-container-lowest: #000f21;
+    --surface-container-low: #0b1c30;
+    --surface-container: #102034;
+    --surface-container-high: #1b2b3f;
+    --surface-container-highest: #26364a;
+    --surface-variant: #26364a;
+
+    /* On-surface text */
+    --on-surface: #d3e4fe;
+    --on-surface-variant: #c2c6d8;
+    --on-background: #d3e4fe;
+
+    /* Primary */
+    --primary: #b3c5ff;
+    --on-primary: #002b75;
+    --primary-container: #0066ff;
+    --on-primary-container: #f8f7ff;
+
+    /* Secondary */
+    --secondary: #aeecff;
+    --on-secondary: #003641;
+    --secondary-container: #00d9ff;
+    --on-secondary-container: #005b6c;
+
+    /* Tertiary */
+    --tertiary: #bec6e0;
+    --on-tertiary: #283044;
+    --tertiary-container: #697188;
+    --on-tertiary-container: #f7f7ff;
+
+    /* Error */
+    --error: #ffb4ab;
+    --on-error: #690005;
+    --error-container: #93000a;
+    --on-error-container: #ffdad6;
+
+    /* Outline */
+    --outline: #8c90a1;
+    --outline-variant: #424656;
+
+    /* Background */
+    --background: #031427;
+
+    /* Focus ring */
+    --focus-ring-color: #b3c5ff;
+    --focus-ring-width: 2px;
+    --focus-ring-offset: 2px;
+  }
+
+  html,
+  body {
+    background-color: var(--background);
+    color: var(--on-background);
+  }
+
+  /* Standardized focus state — 2px primary ring, 2px offset (DESIGN.md §Shapes). */
+  *:focus-visible {
+    outline: var(--focus-ring-width) solid var(--focus-ring-color);
+    outline-offset: var(--focus-ring-offset);
+  }
+}
+
+@layer utilities {
+  /* Soft ambient shadow used on cards (DESIGN.md §Elevation & Depth). */
+  .shadow-ambient {
+    box-shadow: 0px 8px 24px rgba(0, 0, 0, 0.5);
+  }
+
+  /* Hairline 1px border helper matching DESIGN.md Card spec. */
+  .border-hairline {
+    border-width: 1px;
+    border-color: var(--outline-variant);
+  }
+}
