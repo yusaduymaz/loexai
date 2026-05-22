@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mkdir -p \"c:/Users/duyma/Desktop/loex/wiki/raw/docs\" \"c:/Users/duyma/Desktop/loex/wiki/raw/code\" \"c:/Users/duyma/Desktop/loex/wiki/sources/docs\" \"c:/Users/duyma/Desktop/loex/wiki/sources/code\" \"c:/Users/duyma/Desktop/loex/wiki/entities\" \"c:/Users/duyma/Desktop/loex/wiki/concepts\" \"c:/Users/duyma/Desktop/loex/wiki/decisions\" \"c:/Users/duyma/Desktop/loex/wiki/issues\" \"c:/Users/duyma/Desktop/loex/wiki/syntheses\" \"c:/Users/duyma/Desktop/loex/wiki/archive\" && echo \"done\")"
+    ],
+    "additionalDirectories": [
+      "c:\\Users\\duyma\\Desktop\\loex\\wiki\\raw"
+    ]
+  }
+}
