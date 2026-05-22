@@ -9,11 +9,7 @@ import { ComingSoonShell } from "@/components/dashboard/ComingSoonShell";
  * IDs from later phases will land here cleanly. Phase 1 intentionally does
  * NOT query the database — there is no `businesses` row yet.
  */
-export default function BusinessReportPlaceholderPage({
-  params: _params,
-}: {
-  params: { id: string };
-}) {
+export default function BusinessReportPlaceholderPage() {
   return (
     <ComingSoonShell
       icon={<FileText className="h-12 w-12" aria-hidden="true" />}

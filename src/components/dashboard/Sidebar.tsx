@@ -2,7 +2,6 @@ import Link from "next/link";
 import {
   BarChart3,
   Bookmark,
-  Code2,
   FileText,
   LayoutDashboard,
   Megaphone,
