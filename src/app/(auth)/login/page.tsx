@@ -1,26 +1,26 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
+import { SignIn } from "@clerk/nextjs";
 
 import { AuthShell } from "@/components/auth/AuthShell";
-import { LoginForm } from "@/components/auth/LoginForm";
-import { getCurrentUser } from "@/lib/auth/get-user";
 
 export const metadata: Metadata = {
   title: "Log in — LoexAI",
 };
 
-export default async function LoginPage() {
-  const user = await getCurrentUser();
-  if (user) {
-    redirect("/dashboard");
-  }
-
+export default function LoginPage() {
   return (
     <AuthShell
       title="Welcome back"
-      subtitle="Log in to continue building your pipeline."
+      subtitle="Log in with Clerk to continue building your pipeline."
     >
-      <LoginForm />
+      <div className="flex justify-center">
+        <SignIn
+          routing="path"
+          path="/login"
+          signUpUrl="/register"
+          fallbackRedirectUrl="/dashboard"
+        />
+      </div>
     </AuthShell>
   );
 }

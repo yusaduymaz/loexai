@@ -1,5 +1,6 @@
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { getPublicEnv } from "@/lib/config/public";
 
 type CookieToSet = { name: string; value: string; options: CookieOptions };
 
@@ -17,6 +18,7 @@ const PUBLIC_PATHS: ReadonlyArray<string> = [
   "/login",
   "/register",
   "/logout",
+  "/api/health",
 ];
 
 function isPublicPath(pathname: string): boolean {
@@ -46,16 +48,8 @@ export async function updateSession(request: NextRequest): Promise<NextResponse>
     request,
   });
 
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
-
-  if (!url || !key) {
-    // Misconfigured env — fail closed in production. In dev this still flags
-    // loudly via the throw.
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY in env",
-    );
-  }
+  const { NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: key, NEXT_PUBLIC_SUPABASE_URL: url } =
+    getPublicEnv();
 
   const supabase = createServerClient(url, key, {
     cookies: {

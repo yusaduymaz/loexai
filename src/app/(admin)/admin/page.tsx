@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Briefcase, FileBarChart, ScrollText, Users } from "lucide-react";
+import { Activity, Briefcase, FileBarChart, ScrollText, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -36,6 +36,12 @@ const TILES: Array<{
     title: "Templates",
     body: "Industry gap templates (view-only in Phase 1).",
   },
+  {
+    href: "/admin/health",
+    icon: Activity,
+    title: "Health",
+    body: "Environment readiness, provider status, and runtime diagnostics.",
+  },
 ];
 
 export default function AdminOverviewPage() {
@@ -49,12 +55,12 @@ export default function AdminOverviewPage() {
           Operations overview
         </h1>
         <p className="mt-2 max-w-2xl text-sm text-on-surface-variant">
-          Read-only operational views. Editing capabilities (role updates, credit grants,
-          template authoring) ship in Phase 5.
+          Read-only operational views. Editing capabilities (role updates, credit
+          grants, template authoring) ship in Phase 5.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-gutter md:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-1 gap-gutter md:grid-cols-2 xl:grid-cols-5">
         {TILES.map(({ href, icon: Icon, title, body }) => (
           <Link
             key={href}

@@ -1,6 +1,8 @@
 import "server-only";
 
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
+import { getPublicEnv } from "@/lib/config/public";
+import { requireEnvGroup } from "@/lib/config/server";
 
 /**
  * Service-role Supabase client.
@@ -21,14 +23,10 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
  * `./server.ts` instead — it respects RLS.
  */
 export function createAdminClient() {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !serviceRoleKey) {
-    throw new Error(
-      "Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY in env",
-    );
-  }
+  const { NEXT_PUBLIC_SUPABASE_URL: url } = getPublicEnv();
+  const { SUPABASE_SERVICE_ROLE_KEY: serviceRoleKey } = requireEnvGroup(
+    "supabaseAdmin",
+  );
 
   return createSupabaseClient(url, serviceRoleKey, {
     auth: {

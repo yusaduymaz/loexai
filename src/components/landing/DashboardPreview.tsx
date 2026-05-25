@@ -36,13 +36,22 @@ const DETAIL_HOLD_MS = 2400;
 
 export function DashboardPreview() {
   const reduceMotion = useReducedMotion();
-  const [revealedCount, setRevealedCount] = useState<number>(
-    reduceMotion ? SAMPLE_BUSINESSES.length : 0,
-  );
-  const [showDetail, setShowDetail] = useState<boolean>(Boolean(reduceMotion));
+  const [isMounted, setIsMounted] = useState(false);
+  const [revealedCount, setRevealedCount] = useState<number>(0);
+  const [showDetail, setShowDetail] = useState<boolean>(false);
 
   useEffect(() => {
-    if (reduceMotion) return;
+    setIsMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isMounted) return;
+
+    if (reduceMotion) {
+      setRevealedCount(SAMPLE_BUSINESSES.length);
+      setShowDetail(true);
+      return;
+    }
 
     let timeouts: ReturnType<typeof setTimeout>[] = [];
     let cancelled = false;
@@ -86,7 +95,7 @@ export function DashboardPreview() {
       timeouts.forEach((t) => clearTimeout(t));
       timeouts = [];
     };
-  }, [reduceMotion]);
+  }, [isMounted, reduceMotion]);
 
   const highlightedRow = useMemo(
     () =>

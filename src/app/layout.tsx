@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
+import { ClerkProvider } from "@clerk/nextjs";
 import { GeistSans } from "geist/font/sans";
 import { JetBrains_Mono } from "next/font/google";
+import { getPublicAppUrl } from "@/lib/config/public";
+import { reportStartupDiagnostics } from "@/lib/observability/startup";
+import { PostHogProvider } from "./providers";
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
@@ -13,9 +17,7 @@ export const metadata: Metadata = {
   title: "LoexAI — Local Opportunity Engine",
   description:
     "AI-powered local business opportunity intelligence for agencies and freelancers.",
-  metadataBase: new URL(
-    process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
-  ),
+  metadataBase: getPublicAppUrl(),
 };
 
 export default function RootLayout({
@@ -23,6 +25,8 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  reportStartupDiagnostics();
+
   return (
     <html
       lang="tr"
@@ -43,7 +47,14 @@ export default function RootLayout({
         />
       </head>
       <body className="font-sans bg-background text-on-background antialiased min-h-screen">
-        {children}
+        <ClerkProvider
+          signInUrl="/login"
+          signUpUrl="/register"
+          afterSignInUrl="/dashboard"
+          afterSignUpUrl="/dashboard"
+        >
+          <PostHogProvider>{children}</PostHogProvider>
+        </ClerkProvider>
       </body>
     </html>
   );

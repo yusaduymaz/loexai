@@ -32,13 +32,15 @@ export type Database = {
       users: {
         Row: {
           id: string;
+          clerk_user_id: string | null;
           email: string;
           role: "user" | "admin";
           credits: number;
           created_at: string;
         };
         Insert: {
-          id: string;
+          id?: string;
+          clerk_user_id?: string | null;
           email: string;
           role?: "user" | "admin";
           credits?: number;
@@ -46,6 +48,7 @@ export type Database = {
         };
         Update: {
           id?: string;
+          clerk_user_id?: string | null;
           email?: string;
           role?: "user" | "admin";
           credits?: number;
@@ -171,6 +174,10 @@ export type Database = {
           gaps: Json;
           severity_score: number | null;
           summary: string | null;
+          template_version: string;
+          analysis_version: string;
+          evidence: Json;
+          expectation_snapshot: Json | null;
           created_at: string;
           updated_at: string;
         };
@@ -180,6 +187,10 @@ export type Database = {
           gaps: Json;
           severity_score?: number | null;
           summary?: string | null;
+          template_version?: string;
+          analysis_version?: string;
+          evidence?: Json;
+          expectation_snapshot?: Json | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -205,6 +216,9 @@ export type Database = {
           estimated_deal_value_max: number | null;
           estimated_deal_value_currency: "USD" | "EUR" | "TRY" | null;
           reasoning: string | null;
+          scoring_formula_version: string;
+          score_breakdown: Json;
+          scored_at: string | null;
           status:
             | "new"
             | "analyzed"
@@ -226,6 +240,9 @@ export type Database = {
           estimated_deal_value_max?: number | null;
           estimated_deal_value_currency?: "USD" | "EUR" | "TRY" | null;
           reasoning?: string | null;
+          scoring_formula_version?: string;
+          score_breakdown?: Json;
+          scored_at?: string | null;
           status?:
             | "new"
             | "analyzed"
@@ -409,6 +426,194 @@ export type Database = {
             foreignKeyName: "scan_jobs_user_id_fkey";
             columns: ["user_id"];
             referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      scan_job_items: {
+        Row: {
+          id: string;
+          scan_job_id: string;
+          business_id: string | null;
+          provider: "google_places" | "rapidapi" | "manual";
+          provider_place_id: string | null;
+          discovery_rank: number | null;
+          status: "discovered" | "queued" | "analyzing" | "completed" | "failed" | "skipped";
+          raw_result: Json | null;
+          error_message: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          scan_job_id: string;
+          business_id?: string | null;
+          provider: "google_places" | "rapidapi" | "manual";
+          provider_place_id?: string | null;
+          discovery_rank?: number | null;
+          status?: "discovered" | "queued" | "analyzing" | "completed" | "failed" | "skipped";
+          raw_result?: Json | null;
+          error_message?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["scan_job_items"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "scan_job_items_scan_job_id_fkey";
+            columns: ["scan_job_id"];
+            referencedRelation: "scan_jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "scan_job_items_business_id_fkey";
+            columns: ["business_id"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      pipeline_stage_runs: {
+        Row: {
+          id: string;
+          scan_job_id: string | null;
+          scan_job_item_id: string | null;
+          business_id: string;
+          stage:
+            | "discovery"
+            | "enrichment"
+            | "gap_analysis"
+            | "scoring"
+            | "solution_recommendation"
+            | "sales_strategy"
+            | "build_prompt"
+            | "qa";
+          status: "queued" | "running" | "succeeded" | "failed" | "skipped";
+          attempt_number: number;
+          provider: string | null;
+          model: string | null;
+          idempotency_key: string | null;
+          input_hash: string | null;
+          output_ref: string | null;
+          output_summary: Json | null;
+          error_code: string | null;
+          error_message: string | null;
+          metadata: Json;
+          started_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          scan_job_id?: string | null;
+          scan_job_item_id?: string | null;
+          business_id: string;
+          stage:
+            | "discovery"
+            | "enrichment"
+            | "gap_analysis"
+            | "scoring"
+            | "solution_recommendation"
+            | "sales_strategy"
+            | "build_prompt"
+            | "qa";
+          status?: "queued" | "running" | "succeeded" | "failed" | "skipped";
+          attempt_number?: number;
+          provider?: string | null;
+          model?: string | null;
+          idempotency_key?: string | null;
+          input_hash?: string | null;
+          output_ref?: string | null;
+          output_summary?: Json | null;
+          error_code?: string | null;
+          error_message?: string | null;
+          metadata?: Json;
+          started_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["pipeline_stage_runs"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "pipeline_stage_runs_scan_job_id_fkey";
+            columns: ["scan_job_id"];
+            referencedRelation: "scan_jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pipeline_stage_runs_scan_job_item_id_fkey";
+            columns: ["scan_job_item_id"];
+            referencedRelation: "scan_job_items";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "pipeline_stage_runs_business_id_fkey";
+            columns: ["business_id"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+
+      qa_results: {
+        Row: {
+          id: string;
+          business_id: string;
+          opportunity_id: string | null;
+          scan_job_id: string | null;
+          pipeline_stage_run_id: string | null;
+          validator_version: string;
+          status: "passed" | "warning" | "failed";
+          confidence: number | null;
+          checks: Json;
+          issues: Json;
+          evidence: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          business_id: string;
+          opportunity_id?: string | null;
+          scan_job_id?: string | null;
+          pipeline_stage_run_id?: string | null;
+          validator_version?: string;
+          status: "passed" | "warning" | "failed";
+          confidence?: number | null;
+          checks?: Json;
+          issues?: Json;
+          evidence?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: Partial<Database["public"]["Tables"]["qa_results"]["Row"]>;
+        Relationships: [
+          {
+            foreignKeyName: "qa_results_business_id_fkey";
+            columns: ["business_id"];
+            referencedRelation: "businesses";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "qa_results_opportunity_id_fkey";
+            columns: ["opportunity_id"];
+            referencedRelation: "opportunities";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "qa_results_scan_job_id_fkey";
+            columns: ["scan_job_id"];
+            referencedRelation: "scan_jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "qa_results_pipeline_stage_run_id_fkey";
+            columns: ["pipeline_stage_run_id"];
+            referencedRelation: "pipeline_stage_runs";
             referencedColumns: ["id"];
           },
         ];

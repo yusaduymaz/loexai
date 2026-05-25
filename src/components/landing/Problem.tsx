@@ -30,7 +30,7 @@ export function Problem() {
             The problem
           </p>
           <h2 className="font-headline-lg text-headline-lg text-on-background">
-            Finding the right local lead shouldn't feel like archaeology.
+            Finding the right local lead shouldn&apos;t feel like archaeology.
           </h2>
         </div>
 

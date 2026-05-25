@@ -9,6 +9,7 @@
 
 export type AuthUser = {
   id: string;
+  clerkUserId: string;
   email: string;
   role: "user" | "admin";
   credits: number;

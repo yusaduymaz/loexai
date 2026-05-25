@@ -5,12 +5,12 @@
 > SQL wins. Update this doc in the same commit as any migration that changes
 > shape.
 
-## Tables (10)
+## Tables (13)
 
 | Table                       | Owner         | Cardinality                  | RLS pattern                          |
 | --------------------------- | ------------- | ---------------------------- | ------------------------------------ |
-| `users`                     | `auth.users`  | 1 per auth row               | `auth.uid() = id` (no DELETE)        |
-| `businesses`                | `users`       | many per user                | `auth.uid() = user_id`               |
+| `users`                     | Clerk         | 1 per Clerk user             | server profile sync by `clerk_user_id` |
+| `businesses`                | `users`       | many per user                | server filter: `user_id = profile.id` |
 | `business_enrichments`      | `businesses`  | 1 per business               | join → `businesses.user_id`          |
 | `gap_analyses`              | `businesses`  | 1 per business               | join → `businesses.user_id`          |
 | `opportunities`             | `businesses`  | 1 per business (MVP)         | join → `businesses.user_id`          |
@@ -18,13 +18,16 @@
 | `sales_strategies`          | `opportunities` | 1 per opportunity          | join → `businesses.user_id`          |
 | `build_prompts`             | `opportunities` | 1 per opportunity          | join → `businesses.user_id`          |
 | `scan_jobs`                 | `users`       | many per user                | `auth.uid() = user_id`               |
+| `scan_job_items`            | `scan_jobs`   | many per scan                | join → `scan_jobs.user_id`           |
+| `pipeline_stage_runs`       | `businesses`  | many per business/stage      | join → `businesses.user_id`          |
+| `qa_results`                | `businesses`  | many per business/opportunity | join → `businesses.user_id`         |
 | `ai_usage`                  | `users`       | many per user                | own + admin SELECT; append-only      |
 
 ## Relationship map
 
 ```text
-auth.users
-   └── public.users (id, email, role, credits)
+Clerk user
+   └── public.users (id UUID, clerk_user_id, email, role, credits)
           │
           ├── businesses (user_id FK)
           │      │
@@ -37,6 +40,10 @@ auth.users
           │              └── build_prompts            (UNIQUE opportunity_id)
           │
           ├── scan_jobs (user_id FK)
+          │      └── scan_job_items (scan_job_id FK; nullable business_id)
+          │
+          ├── pipeline_stage_runs (business_id FK; nullable scan_job_id/item)
+          ├── qa_results (business_id FK; nullable opportunity/job/run)
           │
           └── ai_usage  (user_id FK; nullable business_id, scan_job_id)
 ```
@@ -56,6 +63,8 @@ even after the work-product is deleted).
 | `solution_recommendations` | `(opportunity_id)`                         |
 | `sales_strategies`         | `(opportunity_id)`                         |
 | `build_prompts`            | `(opportunity_id)`                         |
+| `scan_job_items`           | `(scan_job_id, business_id)` when business is set; `(scan_job_id, provider, provider_place_id)` when provider id is set |
+| `pipeline_stage_runs`      | `(business_id, stage, attempt_number)`; optional unique `idempotency_key` |
 
 Re-running the pipeline for the same business/opportunity will UPDATE, not
 INSERT, by design (ARCH §Idempotent).
@@ -64,7 +73,7 @@ INSERT, by design (ARCH §Idempotent).
 
 | Function                                         | Purpose                                                       |
 | ------------------------------------------------ | ------------------------------------------------------------- |
-| `public.handle_new_user()`                       | AFTER INSERT trigger on `auth.users`; seeds `public.users` with `credits=20, role='user'`. SECURITY DEFINER. |
+| `public.handle_new_user()`                       | Legacy Supabase Auth bridge retained for old environments; Clerk migration drops the trigger. |
 | `public.tg_set_updated_at()`                     | BEFORE UPDATE trigger that stamps `updated_at = now()`. Reused across pipeline tables. |
 | `public.decrement_user_credits(uuid, integer)`   | Atomic credit check + decrement. Returns new balance or `-1` (insufficient). SECURITY DEFINER with internal owner/admin check. |
 

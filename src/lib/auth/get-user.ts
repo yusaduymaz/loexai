@@ -1,55 +1,79 @@
 import "server-only";
 
-import { createClient } from "@/lib/supabase/server";
+import { currentUser } from "@clerk/nextjs/server";
+
+import { createAdminClient } from "@/lib/supabase/admin";
 import type { AuthUser } from "@/types/domain";
 
 /**
- * Resolve the currently authenticated user with their `role` and `credits`.
- *
- * Returns `null` if the request is unauthenticated OR the corresponding
- * `public.users` row is missing (which would indicate a broken trigger —
- * see PLAN-1A migration). Callers MUST handle the null case.
- *
- * Implementation:
- *   1. `supabase.auth.getClaims()` validates the JWT (never `getSession()`).
- *   2. RLS-bound SELECT on `public.users` reads the row matching `auth.uid()`.
- *      The SELECT policy (`auth.uid() = id`) gates this — see migration.
+ * Clerk is the auth source of truth. public.users is the app profile row used
+ * by domain tables through a stable UUID FK.
  */
 export async function getCurrentUser(): Promise<AuthUser | null> {
-  const supabase = await createClient();
+  const clerkUser = await currentUser();
+  if (!clerkUser) return null;
 
-  const { data: claimsData, error: claimsError } = await supabase.auth.getClaims();
-  if (claimsError || !claimsData?.claims) {
-    return null;
-  }
+  const email = clerkUser.primaryEmailAddress?.emailAddress;
+  if (!email) return null;
 
-  const claims = claimsData.claims;
-  const userId = claims.sub;
-  const email = typeof claims.email === "string" ? claims.email : null;
-
-  if (!userId || !email) {
-    return null;
-  }
-
-  const { data: profile, error: profileError } = await supabase
+  const admin = createAdminClient();
+  const existing = await admin
     .from("users")
-    .select("role, credits")
-    .eq("id", userId)
-    .single();
+    .select("id, clerk_user_id, email, role, credits")
+    .eq("clerk_user_id", clerkUser.id)
+    .maybeSingle();
 
-  if (profileError || !profile) {
-    // Trigger should have created the row on auth.users insert. Missing row
-    // = broken trigger or RLS misconfig. Treat as unauthenticated to fail safe.
-    return null;
+  if (existing.error) {
+    throw existing.error;
   }
 
-  const role: AuthUser["role"] = profile.role === "admin" ? "admin" : "user";
-  const credits = typeof profile.credits === "number" ? profile.credits : 0;
+  let profile = existing.data;
+
+  if (!profile) {
+    const byEmail = await admin
+      .from("users")
+      .select("id, clerk_user_id, email, role, credits")
+      .eq("email", email)
+      .maybeSingle();
+
+    if (byEmail.error) {
+      throw byEmail.error;
+    }
+
+    if (byEmail.data) {
+      const updated = await admin
+        .from("users")
+        .update({ clerk_user_id: clerkUser.id, email })
+        .eq("id", byEmail.data.id)
+        .select("id, clerk_user_id, email, role, credits")
+        .single();
+
+      if (updated.error) throw updated.error;
+      profile = updated.data;
+    }
+  }
+
+  if (!profile) {
+    const inserted = await admin
+      .from("users")
+      .insert({
+        clerk_user_id: clerkUser.id,
+        email,
+        role: "user",
+        credits: 20,
+      })
+      .select("id, clerk_user_id, email, role, credits")
+      .single();
+
+    if (inserted.error) throw inserted.error;
+    profile = inserted.data;
+  }
 
   return {
-    id: userId,
-    email,
-    role,
-    credits,
+    id: profile.id,
+    clerkUserId: clerkUser.id,
+    email: profile.email,
+    role: profile.role === "admin" ? "admin" : "user",
+    credits: typeof profile.credits === "number" ? profile.credits : 0,
   };
 }

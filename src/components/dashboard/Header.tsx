@@ -1,16 +1,8 @@
 "use client";
 
-import { LogOut, User as UserIcon } from "lucide-react";
+import { UserButton } from "@clerk/nextjs";
 
 import { CreditBadge } from "./CreditBadge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import type { AuthUser } from "@/types/domain";
 
 /**
@@ -39,30 +31,7 @@ export function Header({ user, title = "Dashboard" }: Props) {
       <div className="flex items-center gap-stack-md">
         <CreditBadge credits={user.credits} variant="compact" />
 
-        <DropdownMenu>
-          <DropdownMenuTrigger
-            aria-label="Open user menu"
-            className="grid h-9 w-9 place-items-center rounded-full border border-outline-variant bg-surface-container text-on-surface-variant transition-colors hover:border-primary hover:text-primary"
-          >
-            <UserIcon className="h-4 w-4" aria-hidden="true" />
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuLabel>{user.email}</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem asChild>
-              <form action="/logout" method="post" className="w-full">
-                <button
-                  type="submit"
-                  className="flex w-full items-center gap-2 text-sm"
-                  aria-label="Log out"
-                >
-                  <LogOut className="h-4 w-4" aria-hidden="true" />
-                  Log out
-                </button>
-              </form>
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        <UserButton afterSignOutUrl="/login" />
       </div>
     </header>
   );

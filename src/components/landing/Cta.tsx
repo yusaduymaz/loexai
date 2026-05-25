@@ -32,7 +32,7 @@ export function Cta() {
           under two minutes.
         </p>
         <Button asChild variant="primary" size="lg" className="relative z-10">
-          <Link href="/register">Get Started — it's free</Link>
+          <Link href="/register">Get Started — it&apos;s free</Link>
         </Button>
       </motion.div>
     </section>
