@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
+  AlertTriangle,
   ArrowLeft,
   Briefcase,
   FileBarChart,
@@ -24,6 +25,7 @@ const NAV: Array<{ href: string; icon: LucideIcon; label: string }> = [
   { href: "/admin/users", icon: Users, label: "Users" },
   { href: "/admin/usage", icon: FileBarChart, label: "AI Usage" },
   { href: "/admin/jobs", icon: Briefcase, label: "Scan Jobs" },
+  { href: "/admin/failures", icon: AlertTriangle, label: "Failures" },
   { href: "/admin/templates", icon: ScrollText, label: "Templates" },
 ];
 

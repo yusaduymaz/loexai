@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Activity, Briefcase, FileBarChart, ScrollText, Users } from "lucide-react";
+import { Activity, AlertTriangle, Briefcase, FileBarChart, ScrollText, Users } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 
 /**
@@ -29,6 +29,12 @@ const TILES: Array<{
     icon: Briefcase,
     title: "Scan Jobs",
     body: "Discovery + pipeline job status (Phase 2+).",
+  },
+  {
+    href: "/admin/failures",
+    icon: AlertTriangle,
+    title: "Failures",
+    body: "Failed pipeline stage runs by stage and provider.",
   },
   {
     href: "/admin/templates",
