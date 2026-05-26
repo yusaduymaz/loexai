@@ -124,6 +124,22 @@
 
 ---
 
+### Phase 6: Admin Ops Completion ✅ Complete (2026-05-26)
+**Goal:** Admin paneli operasyonel tamamlanır: AI kullanım analitiği, pipeline hata takibi ve canlı template viewer.
+**Requirements:** ADM-02, ADM-03
+
+**Success Criteria:**
+1. `/admin/usage` per-user ve per-stage maliyet özeti gösterir (son 500 kayıt üzerinden)
+2. `/admin/failures` başarısız pipeline_stage_runs'ları aşama ve provider bazında listeler
+3. `/admin/templates` lib/intelligence/templates.ts ve scoring.ts'den canlı olarak çeker; statik liste yok
+
+**Plans:**
+- [x] PLAN-6A: /admin/usage aggregation analytics (per-user, per-stage, summary stats) — 2026-05-26
+- [x] PLAN-6B: /admin/failures provider failure monitoring page — 2026-05-26
+- [x] PLAN-6C: Live /admin/templates viewer backed by real code exports — 2026-05-26
+
+---
+
 ## Milestone Map
 
 | Milestone | End of Phase | What Works |

@@ -6,15 +6,15 @@ See: `.planning/PROJECT.md` (updated 2026-05-22)
 
 **Core value:** "Hangi yerel işletmeye ulaşmalıyım, ona ne satmalıyım, neden ihtiyacı var ve nasıl inşa etmeliyim?" sorusunu tek platformda yanıtlamak.
 
-**Current focus:** Phase 1 — Foundation (Auth, DB, Layout)
+**Current focus:** Phase 7 — Monetization (next phase after Phase 6 completion)
 
 ---
 
 ## Current State
 
-**Milestone:** Pre-development (planning complete)
-**Active Phase:** None (Phase 1 not started)
-**Completed Phases:** —
+**Milestone:** MVP product layers implemented through P6
+**Active Phase:** None (Phase 6 complete, Phase 7 ready to start)
+**Completed Phases:** P1 Pipeline Data Model, P2 Discovery MVP, P3 Deterministic Intelligence MVP, P4 AI Layer MVP, P5 Product Magic Moment, P6 Admin And Ops
 
 ---
 
@@ -22,20 +22,22 @@ See: `.planning/PROJECT.md` (updated 2026-05-22)
 
 | Phase | Status | Notes |
 |-------|--------|-------|
-| Phase 1: Foundation | 🔜 Ready | Auth + DB + landing + layout |
-| Phase 2: Lead Discovery | ⏳ Blocked | Requires Phase 1 |
-| Phase 3: Intelligence Pipeline | ⏳ Blocked | Requires Phase 2 |
-| Phase 4: AI Output | ⏳ Blocked | Requires Phase 3 |
-| Phase 5: SaaS Layer | ⏳ Blocked | Requires Phase 4 |
+| P1: Pipeline Data Model | ✅ Complete | scan items, stage runs, persisted QA, scoring/gap metadata |
+| P2: Discovery MVP | ✅ Complete | Google Places provider, job launcher, business persistence |
+| P3: Deterministic Intelligence MVP | ✅ Complete | probes, templates, gap analysis, scoring, audit records |
+| P4: AI Layer MVP | ✅ Complete | provider abstraction, adapters, schemas, usage logging |
+| P5: Product Magic Moment | ✅ Complete | report, opportunities, AI panels, export/share brief |
+| P6: Admin And Ops | ✅ Complete | usage analytics (6A), failure monitoring (6B), live template viewer (6C) |
+| P7: Monetization | 🔜 Ready | Stripe products, webhooks, plan/credit sync, upgrade UX |
 
 ---
 
 ## Key Context
 
-- **Stack:** Next.js 15 App Router, Supabase, TypeScript strict, Tailwind, shadcn/ui
+- **Stack:** Next.js 14 App Router, Supabase, Clerk, TypeScript strict, Tailwind, shadcn/ui
 - **AI:** AIProvider interface — OpenRouter free models (dev), Anthropic (prod)
 - **Pipeline:** Upstash Workflow (not raw QStash) for 8-step pipeline orchestration
-- **Auth:** `@supabase/ssr` + `getClaims()` — never `getSession()` on server
+- **Auth:** Clerk with app-profile mapping in `public.users.clerk_user_id`; admin reads use service-role server client
 - **Critical rule:** Null-propagation — enrichment failures = explicit `null`, never inferred gaps
 - **Cost control:** Max 2 AI retries per stage; mid-job ai_usage check; circuit breaker required
 
@@ -53,10 +55,12 @@ See: `.planning/PROJECT.md` (updated 2026-05-22)
 
 ---
 
+## Session Continuity
+
+Last session: 2026-05-26
+Stopped at: Phase 6 complete — 3 plans executed (6A usage analytics, 6B failure monitoring, 6C live template viewer)
+Resume file: none
+
 ## Next Action
 
-```
-/gsd-plan-phase 1
-```
-
-*Context gathered 2026-05-22. Resume file: `.planning/phases/01-foundation-auth-db-layout/01-CONTEXT.md`*
+/gsd-discuss-phase 7
