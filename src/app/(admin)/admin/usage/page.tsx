@@ -29,7 +29,31 @@ type UsageRow = {
   users: { email: string } | null;
 };
 
+type UserSummary = {
+  userId: string;
+  email: string;
+  totalCostUsd: number;
+  totalTokens: number;
+  callCount: number;
+};
+
+type StageSummary = {
+  stage: string;
+  totalCostUsd: number;
+  totalTokens: number;
+  callCount: number;
+};
+
 export const dynamic = "force-dynamic";
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-xl border border-outline-variant bg-surface-container-low p-stack-lg">
+      <p className="text-xs uppercase tracking-wider text-on-surface-variant">{label}</p>
+      <p className="mt-2 text-lg font-semibold text-on-surface">{value}</p>
+    </div>
+  );
+}
 
 export default async function AdminUsagePage({
   searchParams,
@@ -56,11 +80,73 @@ export default async function AdminUsagePage({
     }
   }
 
+  // Aggregate fetch — always fetches 500 rows regardless of filters so that
+  // summary stats reflect the full recent window, not the filtered slice.
+  const { data: allData } = await admin
+    .from("ai_usage")
+    .select("id, created_at, user_id, stage, model, input_tokens, output_tokens, cost_usd, users:user_id(email)")
+    .order("created_at", { ascending: false })
+    .limit(500);
+  const allRows: UsageRow[] = allData ? (allData as unknown as UsageRow[]) : [];
+
+  // All-time totals (over the 500-row window)
+  const allTimeCost: number = allRows.reduce((s, r) => s + (r.cost_usd ?? 0), 0);
+  const allTimeTokens: number = allRows.reduce(
+    (s, r) => s + (r.input_tokens ?? 0) + (r.output_tokens ?? 0),
+    0,
+  );
+  const allTimeCalls: number = allRows.length;
+
+  // Per-user aggregation
+  const byUser = new Map<string, UserSummary>();
+  for (const row of allRows) {
+    const existing = byUser.get(row.user_id);
+    const email = row.users?.email ?? "—";
+    if (existing) {
+      existing.totalCostUsd += row.cost_usd ?? 0;
+      existing.totalTokens += (row.input_tokens ?? 0) + (row.output_tokens ?? 0);
+      existing.callCount += 1;
+    } else {
+      byUser.set(row.user_id, {
+        userId: row.user_id,
+        email,
+        totalCostUsd: row.cost_usd ?? 0,
+        totalTokens: (row.input_tokens ?? 0) + (row.output_tokens ?? 0),
+        callCount: 1,
+      });
+    }
+  }
+  const userSummaries: UserSummary[] = [...byUser.values()].sort(
+    (a, b) => b.totalCostUsd - a.totalCostUsd,
+  );
+
+  // Per-stage aggregation
+  const byStage = new Map<string, StageSummary>();
+  for (const row of allRows) {
+    const existing = byStage.get(row.stage);
+    if (existing) {
+      existing.totalCostUsd += row.cost_usd ?? 0;
+      existing.totalTokens += (row.input_tokens ?? 0) + (row.output_tokens ?? 0);
+      existing.callCount += 1;
+    } else {
+      byStage.set(row.stage, {
+        stage: row.stage,
+        totalCostUsd: row.cost_usd ?? 0,
+        totalTokens: (row.input_tokens ?? 0) + (row.output_tokens ?? 0),
+        callCount: 1,
+      });
+    }
+  }
+  const stageSummaries: StageSummary[] = [...byStage.values()].sort(
+    (a, b) => b.totalCostUsd - a.totalCostUsd,
+  );
+
+  // Filtered query for the raw table below
   let query = admin
     .from("ai_usage")
     .select("id, created_at, user_id, stage, model, input_tokens, output_tokens, cost_usd, users:user_id(email)")
     .order("created_at", { ascending: false })
-    .limit(200);
+    .limit(500);
 
   if (params.from) query = query.gte("created_at", params.from);
   if (params.to) query = query.lte("created_at", `${params.to}T23:59:59Z`);
@@ -84,6 +170,111 @@ export default async function AdminUsagePage({
         <p className="mt-1 text-sm text-on-surface-variant">
           Per-call token spend and cost. Populated by every AI generation in Phase 3+.
         </p>
+      </div>
+
+      {/* Section 1 — Summary stats cards */}
+      <section className="grid grid-cols-1 gap-gutter md:grid-cols-3">
+        <StatCard label="Total Cost (all-time)" value={`$${allTimeCost.toFixed(4)}`} />
+        <StatCard label="Total Tokens" value={allTimeTokens.toLocaleString()} />
+        <StatCard label="Total Calls" value={String(allTimeCalls)} />
+      </section>
+
+      {/* Section 2 — Per-user summary table */}
+      <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-low">
+        <div className="border-b border-outline-variant px-stack-md py-3">
+          <h2 className="text-sm font-semibold text-on-surface">Per-user summary</h2>
+          <p className="text-xs text-on-surface-variant">Aggregated over last 500 records</p>
+        </div>
+        <table className="w-full border-collapse text-left text-sm">
+          <thead className="bg-surface-container">
+            <tr className="border-b border-outline-variant">
+              {["User", "Calls", "Total Tokens", "Total Cost (USD)"].map((h) => (
+                <th
+                  key={h}
+                  className="px-stack-md py-3 text-xs font-medium uppercase tracking-wider text-on-surface-variant"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/50">
+            {userSummaries.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-stack-md py-stack-xl text-center text-on-surface-variant"
+                >
+                  No data yet.
+                </td>
+              </tr>
+            ) : (
+              userSummaries.map((u) => (
+                <tr key={u.userId} className="hover:bg-surface-container/50">
+                  <td className="px-stack-md py-3 text-on-surface">{u.email}</td>
+                  <td className="px-stack-md py-3 text-right font-mono text-on-surface">
+                    {u.callCount}
+                  </td>
+                  <td className="px-stack-md py-3 text-right font-mono text-on-surface">
+                    {u.totalTokens.toLocaleString()}
+                  </td>
+                  <td className="px-stack-md py-3 text-right font-mono text-on-surface">
+                    ${u.totalCostUsd.toFixed(4)}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Section 3 — Per-stage breakdown table */}
+      <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-low">
+        <div className="border-b border-outline-variant px-stack-md py-3">
+          <h2 className="text-sm font-semibold text-on-surface">Per-stage breakdown</h2>
+          <p className="text-xs text-on-surface-variant">Aggregated over last 500 records</p>
+        </div>
+        <table className="w-full border-collapse text-left text-sm">
+          <thead className="bg-surface-container">
+            <tr className="border-b border-outline-variant">
+              {["Stage", "Calls", "Total Tokens", "Total Cost (USD)"].map((h) => (
+                <th
+                  key={h}
+                  className="px-stack-md py-3 text-xs font-medium uppercase tracking-wider text-on-surface-variant"
+                >
+                  {h}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-outline-variant/50">
+            {stageSummaries.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={4}
+                  className="px-stack-md py-stack-xl text-center text-on-surface-variant"
+                >
+                  No stage data yet.
+                </td>
+              </tr>
+            ) : (
+              stageSummaries.map((s) => (
+                <tr key={s.stage} className="hover:bg-surface-container/50">
+                  <td className="px-stack-md py-3 text-on-surface">{s.stage}</td>
+                  <td className="px-stack-md py-3 text-right font-mono text-on-surface">
+                    {s.callCount}
+                  </td>
+                  <td className="px-stack-md py-3 text-right font-mono text-on-surface">
+                    {s.totalTokens.toLocaleString()}
+                  </td>
+                  <td className="px-stack-md py-3 text-right font-mono text-on-surface">
+                    ${s.totalCostUsd.toFixed(4)}
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
 
       {/* Filter bar */}
@@ -129,7 +320,7 @@ export default async function AdminUsagePage({
         </div>
       </form>
 
-      {/* Table */}
+      {/* Raw table */}
       <div className="overflow-x-auto rounded-xl border border-outline-variant bg-surface-container-low">
         <table className="w-full border-collapse text-left text-sm">
           <thead className="bg-surface-container">
@@ -186,8 +377,11 @@ export default async function AdminUsagePage({
           </tbody>
           <tfoot className="bg-surface-container/50">
             <tr>
-              <td colSpan={6} className="px-stack-md py-3 text-right text-xs uppercase tracking-wider text-on-surface-variant">
-                Total cost
+              <td
+                colSpan={6}
+                className="px-stack-md py-3 text-right text-xs uppercase tracking-wider text-on-surface-variant"
+              >
+                Total cost (filtered)
               </td>
               <td className="px-stack-md py-3 text-right font-mono text-on-surface" data-mono>
                 ${totalCostUsd.toFixed(4)}
