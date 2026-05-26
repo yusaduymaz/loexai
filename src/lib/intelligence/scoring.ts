@@ -3,7 +3,15 @@ import "server-only";
 import type { GapAnalysisResult, ScoreResult, WebsiteProbe } from "@/lib/intelligence/types";
 import type { Tables } from "@/types/database";
 
-const FORMULA_VERSION = "opportunity-score-v1";
+export const FORMULA_VERSION = "opportunity-score-v1";
+
+export const SCORE_WEIGHTS = {
+  reviewSignal: { formula: "min(20, round(review_count / 10))", max: 20 },
+  ratingSignal: { formula: "max(0, round((5 - rating) * 6))", max: 30 },
+  gapSignal: { formula: "min(45, round(severityScore * 0.45))", max: 45 },
+  reachabilitySignal: { formula: "probe.status !== 'ok' ? 12 : 0", max: 12 },
+  contactSignal: { formula: "!hasContact && !phone ? 10 : 0", max: 10 },
+} as const;
 
 export function scoreOpportunity({
   business,

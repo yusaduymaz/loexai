@@ -2,16 +2,16 @@ import "server-only";
 
 import type { IndustryExpectation } from "@/lib/intelligence/types";
 
-const TEMPLATE_VERSION = "industry-template-v1";
+export const TEMPLATE_VERSION = "industry-template-v1";
 
-const DEFAULT_SIGNALS: IndustryExpectation["expectedSignals"] = [
+export const DEFAULT_SIGNALS: IndustryExpectation["expectedSignals"] = [
   "website",
   "mobile",
   "contact",
   "social",
 ];
 
-const CATEGORY_SIGNAL_MAP: Record<string, IndustryExpectation["expectedSignals"]> = {
+export const CATEGORY_SIGNAL_MAP: Record<string, IndustryExpectation["expectedSignals"]> = {
   restaurant: ["website", "mobile", "contact", "booking", "whatsapp", "social"],
   restaurants: ["website", "mobile", "contact", "booking", "whatsapp", "social"],
   cafe: ["website", "mobile", "contact", "social"],
