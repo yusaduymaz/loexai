@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { Menu, X } from "lucide-react";
+import { SignOutButton } from "@clerk/nextjs";
 
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -82,11 +83,11 @@ export function MarketingNav({ authenticated = false }: MarketingNavProps) {
               <Button asChild variant="ghost" size="sm" className="hidden md:inline-flex">
                 <Link href="/dashboard">Dashboard</Link>
               </Button>
-              <form action="/logout" method="post">
-                <Button type="submit" variant="secondary" size="sm">
+              <SignOutButton redirectUrl="/login">
+                <Button variant="secondary" size="sm">
                   Log out
                 </Button>
-              </form>
+              </SignOutButton>
             </>
           ) : (
             <>
