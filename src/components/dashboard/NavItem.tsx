@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import type { LucideIcon } from "lucide-react";
+import {
+  Bookmark,
+  FileText,
+  LayoutDashboard,
+  Search,
+  Settings,
+  Sparkles,
+  Target,
+  Users,
+} from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
@@ -14,12 +23,32 @@ import { cn } from "@/lib/utils";
  */
 type Props = {
   href: string;
-  icon: LucideIcon;
+  icon:
+    | "layout-dashboard"
+    | "search"
+    | "target"
+    | "file-text"
+    | "sparkles"
+    | "bookmark"
+    | "users"
+    | "settings";
   label: string;
 };
 
-export function NavItem({ href, icon: Icon, label }: Props) {
+const ICONS = {
+  "layout-dashboard": LayoutDashboard,
+  "search": Search,
+  "target": Target,
+  "file-text": FileText,
+  "sparkles": Sparkles,
+  "bookmark": Bookmark,
+  "users": Users,
+  "settings": Settings,
+} as const;
+
+export function NavItem({ href, icon, label }: Props) {
   const pathname = usePathname();
+  const Icon = ICONS[icon];
   const active =
     pathname === href ||
     (href !== "/dashboard" && pathname.startsWith(`${href}/`));

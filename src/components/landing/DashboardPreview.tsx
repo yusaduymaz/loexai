@@ -1,44 +1,43 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Check, Radar, Search } from "lucide-react";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import { ArrowRight, CheckCircle2, Radar, Search } from "lucide-react";
 
-import { Badge } from "@/components/ui/badge";
-
-/**
- * D-05: Animated dashboard preview.
- *
- * "Live intelligence feed" — left column streams fake scan rows with score
- * counters, right column reveals a detail card for the highest-scoring
- * business. Cycle resets every ~8 seconds.
- *
- * Reduced-motion users see a static final-state snapshot with all rows
- * scored and the detail card already visible.
- */
+import { DotPattern } from "./effects/DotPattern";
+import { BorderBeam } from "./effects/BorderBeam";
 
 type ScanRow = {
   name: string;
   category: string;
   score: number;
+  gap: string;
 };
 
 const SAMPLE_BUSINESSES: ScanRow[] = [
-  { name: "Klinik Beyaz", category: "Dental", score: 87 },
-  { name: "Cafe Mavi", category: "Cafe", score: 64 },
-  { name: "Berber Yusuf", category: "Barber", score: 71 },
-  { name: "Pastane Lila", category: "Bakery", score: 52 },
-  { name: "Studio Form", category: "Fitness", score: 78 },
+  { name: "Klinik Beyaz", category: "Dental", score: 87, gap: "No booking flow" },
+  { name: "Cafe Mavi", category: "Cafe", score: 64, gap: "Weak mobile UX" },
+  { name: "Studio Form", category: "Fitness", score: 78, gap: "Missing class funnel" },
+  { name: "Berber Yusuf", category: "Barber", score: 71, gap: "No review strategy" },
+  { name: "Pastane Lila", category: "Bakery", score: 52, gap: "No service landing page" },
 ];
 
 const ROW_INTERVAL_MS = 900;
 const DETAIL_HOLD_MS = 2400;
 
+function scoreTone(score: number) {
+  if (score >= 80) return "from-secondary to-secondary-container";
+  if (score >= 65) return "from-primary to-secondary";
+  return "from-primary-fixed-dim to-primary";
+}
+
 export function DashboardPreview() {
   const reduceMotion = useReducedMotion();
   const [isMounted, setIsMounted] = useState(false);
-  const [revealedCount, setRevealedCount] = useState<number>(0);
-  const [showDetail, setShowDetail] = useState<boolean>(false);
+  const [revealedCount, setRevealedCount] = useState(0);
+  const [showDetail, setShowDetail] = useState(false);
+
+  const shouldReduceMotion = isMounted && !!reduceMotion;
 
   useEffect(() => {
     setIsMounted(true);
@@ -47,251 +46,285 @@ export function DashboardPreview() {
   useEffect(() => {
     if (!isMounted) return;
 
-    if (reduceMotion) {
+    if (shouldReduceMotion) {
       setRevealedCount(SAMPLE_BUSINESSES.length);
       setShowDetail(true);
       return;
     }
 
-    let timeouts: ReturnType<typeof setTimeout>[] = [];
     let cancelled = false;
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
 
     function runCycle() {
       if (cancelled) return;
       setRevealedCount(0);
       setShowDetail(false);
 
-      SAMPLE_BUSINESSES.forEach((_, idx) => {
-        const t = setTimeout(
-          () => {
-            if (!cancelled) setRevealedCount(idx + 1);
-          },
-          ROW_INTERVAL_MS * (idx + 1),
-        );
-        timeouts.push(t);
+      SAMPLE_BUSINESSES.forEach((_, index) => {
+        const timeout = setTimeout(() => {
+          if (!cancelled) setRevealedCount(index + 1);
+        }, ROW_INTERVAL_MS * (index + 1));
+        timeouts.push(timeout);
       });
 
-      const detailT = setTimeout(
-        () => {
-          if (!cancelled) setShowDetail(true);
-        },
-        ROW_INTERVAL_MS * (SAMPLE_BUSINESSES.length + 1),
-      );
-      timeouts.push(detailT);
+      const showDetailTimeout = setTimeout(() => {
+        if (!cancelled) setShowDetail(true);
+      }, ROW_INTERVAL_MS * (SAMPLE_BUSINESSES.length + 1));
 
-      const resetT = setTimeout(
-        () => {
-          if (!cancelled) runCycle();
-        },
-        ROW_INTERVAL_MS * (SAMPLE_BUSINESSES.length + 1) + DETAIL_HOLD_MS,
-      );
-      timeouts.push(resetT);
+      const resetTimeout = setTimeout(() => {
+        if (!cancelled) runCycle();
+      }, ROW_INTERVAL_MS * (SAMPLE_BUSINESSES.length + 1) + DETAIL_HOLD_MS);
+
+      timeouts.push(showDetailTimeout, resetTimeout);
     }
 
     runCycle();
 
     return () => {
       cancelled = true;
-      timeouts.forEach((t) => clearTimeout(t));
-      timeouts = [];
+      timeouts.forEach(clearTimeout);
     };
-  }, [isMounted, reduceMotion]);
+  }, [isMounted, shouldReduceMotion]);
 
   const highlightedRow = useMemo(
-    () =>
-      SAMPLE_BUSINESSES.reduce((best, row) =>
-        row.score > best.score ? row : best,
-      ),
+    () => SAMPLE_BUSINESSES.reduce((best, row) => (row.score > best.score ? row : best)),
     [],
   );
 
   return (
-    <section className="relative z-20 px-margin-mobile py-stack-xl md:px-margin-desktop md:py-24">
-      <div className="mx-auto max-w-container-max">
-        <div className="mb-stack-xl text-center">
-          <p className="mb-stack-sm font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-            Live intelligence feed
+    <section
+      id="preview"
+      className="relative overflow-hidden border-b border-outline-variant/20 bg-[#041221] px-margin-mobile py-20 md:px-margin-desktop md:py-28"
+    >
+      <DotPattern className="text-on-surface-variant" opacity={0.1} size={26} />
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-[2px] bg-gradient-to-r from-transparent via-secondary/40 to-transparent"
+      />
+
+      <div className="relative mx-auto max-w-container-max">
+        <div className="mb-12 grid gap-8 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
+          <div>
+            <p className="text-xs uppercase tracking-[0.32em] text-secondary">
+              Platform preview
+            </p>
+            <h2 className="mt-5 max-w-xl text-balance text-4xl leading-[1.05] text-on-background md:text-5xl lg:text-[3.5rem] [font-family:var(--font-editorial-serif)]">
+              A scan that ends with a sales angle your team can actually use.
+            </h2>
+          </div>
+          <p className="max-w-2xl text-base leading-7 text-on-surface-variant lg:justify-self-end">
+            The interface is intentionally built around signal clarity: which
+            account matters, why it matters, and what should happen next.
           </p>
-          <h2 className="font-headline-lg text-headline-lg text-on-background">
-            Watch a scan turn into a closeable opportunity.
-          </h2>
         </div>
 
-        <div
-          aria-hidden="true"
-          className="relative mx-auto grid max-w-5xl grid-cols-1 gap-stack-md rounded-xl border border-outline-variant/30 bg-surface-container p-stack-lg shadow-ambient md:grid-cols-5"
-          style={{ willChange: "transform" }}
-        >
-          {/* Left: streaming scan rows */}
-          <div className="flex flex-col gap-stack-md md:col-span-3">
-            <div className="flex items-center gap-stack-sm rounded-lg border border-outline-variant/30 bg-surface-container-low px-stack-md py-stack-sm">
-              <Search className="h-4 w-4 text-secondary" aria-hidden="true" />
-              <span className="font-data-mono text-body-sm text-on-surface">
-                dentists in Istanbul, 2km
-              </span>
-              <span className="ml-auto inline-flex items-center gap-1 font-label-caps text-label-caps uppercase tracking-widest text-secondary">
-                <Radar className="h-3 w-3" aria-hidden="true" />
-                Scanning
-              </span>
+        <div className="panel-halo edge-highlight relative overflow-hidden rounded-[28px] p-1.5">
+          <BorderBeam duration={18} thickness={1} />
+          {/* Inner browser chrome */}
+          <div className="relative rounded-[22px] border border-outline-variant/15 bg-surface-container-lowest/85 overflow-hidden">
+            {/* Window bar */}
+            <div className="flex items-center gap-3 border-b border-outline-variant/15 bg-surface-container-low/70 px-4 py-3">
+              <div className="flex items-center gap-1.5">
+                <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e]" />
+                <span className="h-2.5 w-2.5 rounded-full bg-[#28c840]" />
+              </div>
+              <div className="hidden flex-1 items-center justify-center md:flex">
+                <div className="inline-flex items-center gap-2 rounded-full border border-outline-variant/20 bg-surface-container-low/70 px-3 py-1 font-mono text-[11px] text-on-surface-variant">
+                  <span className="h-1.5 w-1.5 rounded-full bg-secondary/80" />
+                  app.loexai.com / dashboard / discovery
+                </div>
+              </div>
+              <div className="ml-auto text-[10px] uppercase tracking-[0.26em] text-on-surface-variant/55">
+                v1.0
+              </div>
             </div>
 
-            <ul className="flex flex-col gap-stack-sm">
-              {SAMPLE_BUSINESSES.map((biz, idx) => {
-                const isRevealed = idx < revealedCount;
-                const isActive = !showDetail && idx === revealedCount - 1;
-                return (
-                  <li
-                    key={biz.name}
-                    className={`flex items-center justify-between rounded-lg border px-stack-md py-stack-sm transition-all duration-300 ${
-                      isRevealed
-                        ? "border-outline-variant/40 bg-surface-container-low opacity-100"
-                        : "border-outline-variant/20 bg-surface-container-low/30 opacity-40"
-                    } ${
-                      isActive
-                        ? "shadow-[0_0_24px_rgba(0,217,255,0.35)] border-secondary/50"
-                        : ""
-                    }`}
-                  >
-                    <div className="flex flex-col">
-                      <span className="text-body-sm font-medium text-on-surface">
-                        {biz.name}
-                      </span>
-                      <span className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">
-                        {biz.category}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-stack-sm">
-                      {isRevealed ? (
-                        <ScoreCounter target={biz.score} active={isActive} />
-                      ) : (
-                        <span className="font-data-mono text-body-sm text-on-surface-variant">
-                          Analyzing…
-                        </span>
-                      )}
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          {/* Right: detail card */}
-          <div className="relative flex flex-col gap-stack-md rounded-lg border border-outline-variant/40 bg-surface-container-low p-stack-md md:col-span-2">
-            <AnimatePresence>
-              {showDetail ? (
-                <motion.div
-                  key="detail"
-                  initial={
-                    reduceMotion ? false : { opacity: 0, y: 12 }
-                  }
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: 12 }}
-                  transition={{ duration: 0.4 }}
-                  className="flex flex-col gap-stack-md"
-                >
-                  <div className="flex items-start justify-between gap-stack-sm">
-                    <div>
-                      <p className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">
-                        Top opportunity
-                      </p>
-                      <h3 className="font-title-md text-title-md text-on-surface">
-                        {highlightedRow.name}
-                      </h3>
-                    </div>
-                    <Badge variant="warning">HIGH</Badge>
+            <div className="grid gap-5 p-5 md:p-6 xl:grid-cols-[1.1fr_0.9fr]">
+              {/* ── Left: scan results ─────────────────────────────── */}
+              <div className="rounded-[20px] border border-outline-variant/15 bg-black/15 p-5">
+                <div className="flex flex-wrap items-center gap-3 border-b border-outline-variant/15 pb-4">
+                  <div className="flex items-center gap-3 rounded-full border border-outline-variant/20 bg-surface-container-low/80 px-4 py-2">
+                    <Search
+                      className="h-4 w-4 text-secondary"
+                      aria-hidden="true"
+                    />
+                    <span className="font-mono text-sm text-on-surface">
+                      dentists near Sisli, Istanbul
+                    </span>
                   </div>
-
-                  <div>
-                    <p className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">
-                      Opportunity score
-                    </p>
-                    <p className="font-data-mono text-5xl font-medium text-on-surface">
-                      {highlightedRow.score}
-                    </p>
+                  <div className="ml-auto inline-flex items-center gap-2 rounded-full border border-secondary/25 bg-secondary/10 px-3 py-1.5 text-[11px] uppercase tracking-[0.28em] text-secondary">
+                    <Radar
+                      className="h-3.5 w-3.5 animate-pulse-soft"
+                      aria-hidden="true"
+                    />
+                    Live analysis
                   </div>
+                </div>
 
-                  <ul className="flex flex-col gap-stack-xs">
-                    {[
-                      "No website",
-                      "No online booking",
-                      "Weak local SEO",
-                    ].map((gap) => (
+                <ul className="mt-5 grid gap-3">
+                  {SAMPLE_BUSINESSES.map((business, index) => {
+                    const isRevealed = index < revealedCount;
+                    const isActive = !showDetail && index === revealedCount - 1;
+
+                    return (
                       <li
-                        key={gap}
-                        className="flex items-center gap-stack-sm text-body-sm text-on-surface-variant"
+                        key={business.name}
+                        className={[
+                          "grid items-center gap-4 rounded-2xl border px-4 py-4 transition-all duration-300 md:grid-cols-[1fr_auto_auto]",
+                          isRevealed
+                            ? "border-outline-variant/25 bg-surface-container-low/70 opacity-100"
+                            : "border-outline-variant/10 bg-surface-container-low/30 opacity-45",
+                          isActive
+                            ? "border-secondary/50 shadow-[0_0_30px_rgba(174,236,255,0.2)]"
+                            : "",
+                        ].join(" ")}
                       >
-                        <Check
-                          className="h-4 w-4 text-secondary"
-                          aria-hidden="true"
-                        />
-                        {gap}
+                        <div>
+                          <p className="text-base text-on-surface">
+                            {business.name}
+                          </p>
+                          <p className="mt-1 text-[11px] uppercase tracking-[0.26em] text-on-surface-variant/70">
+                            {business.category}
+                          </p>
+                        </div>
+                        <div className="rounded-full border border-outline-variant/15 bg-surface/60 px-3 py-1.5 text-sm text-on-surface-variant">
+                          {isRevealed ? business.gap : "Scanning signal"}
+                        </div>
+                        <div className="min-w-[80px] text-right">
+                          {isRevealed ? (
+                            <div className="flex items-center justify-end gap-2">
+                              <div className="h-1.5 w-14 overflow-hidden rounded-full bg-surface-container-lowest">
+                                <div
+                                  className={`h-full rounded-full bg-gradient-to-r ${scoreTone(business.score)} transition-all duration-700`}
+                                  style={{ width: `${business.score}%` }}
+                                />
+                              </div>
+                              <span
+                                className={[
+                                  "font-mono text-base tabular-nums",
+                                  isActive ? "text-secondary" : "text-on-surface",
+                                ].join(" ")}
+                              >
+                                {business.score}
+                              </span>
+                            </div>
+                          ) : (
+                            <span className="font-mono text-sm text-on-surface-variant/70">
+                              ...
+                            </span>
+                          )}
+                        </div>
                       </li>
-                    ))}
-                  </ul>
+                    );
+                  })}
+                </ul>
 
-                  <div className="rounded-lg border border-outline-variant/30 bg-surface-container px-stack-md py-stack-sm">
-                    <p className="font-label-caps text-label-caps uppercase tracking-widest text-on-surface-variant">
-                      Recommended
+                {/* Footer stats */}
+                <div className="mt-5 grid grid-cols-3 gap-2 border-t border-outline-variant/15 pt-4 text-center text-[11px] uppercase tracking-[0.22em] text-on-surface-variant/65">
+                  <div>
+                    <p className="text-base font-medium text-on-surface [font-family:var(--font-editorial-serif)]">
+                      {SAMPLE_BUSINESSES.length}
                     </p>
-                    <p className="text-body-sm text-on-surface">
-                      Business website + booking system
-                    </p>
+                    <p>Analyzed</p>
                   </div>
-                </motion.div>
-              ) : (
-                <motion.div
-                  key="placeholder"
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  exit={{ opacity: 0 }}
-                  className="flex h-full min-h-[280px] items-center justify-center text-center"
-                >
-                  <p className="text-body-sm text-on-surface-variant">
-                    Waiting for highest-scoring lead…
+                  <div>
+                    <p className="text-base font-medium text-on-surface [font-family:var(--font-editorial-serif)]">
+                      2
+                    </p>
+                    <p>High priority</p>
+                  </div>
+                  <div>
+                    <p className="text-base font-medium text-on-surface [font-family:var(--font-editorial-serif)]">
+                      ~3k–8k €
+                    </p>
+                    <p>Deal range</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* ── Right: detail panel ─────────────────────────────── */}
+              <div className="grid gap-5">
+                <div className="rounded-[20px] border border-outline-variant/15 bg-surface-container-low/75 p-5">
+                  <AnimatePresence mode="wait">
+                    {showDetail ? (
+                      <motion.div
+                        key="detail"
+                        initial={shouldReduceMotion ? false : { opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 12 }}
+                        transition={{ duration: 0.35 }}
+                      >
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <p className="text-xs uppercase tracking-[0.3em] text-on-surface-variant/70">
+                              Highest leverage account
+                            </p>
+                            <h3 className="mt-2 text-3xl leading-tight text-on-background [font-family:var(--font-editorial-serif)]">
+                              {highlightedRow.name}
+                            </h3>
+                          </div>
+                          <div className="rounded-full border border-primary/25 bg-gradient-to-br from-primary/20 to-secondary/10 px-3 py-1 text-xs uppercase tracking-[0.28em] text-primary">
+                            Score {highlightedRow.score}
+                          </div>
+                        </div>
+
+                        <div className="mt-6 space-y-3">
+                          {[
+                            "Missing booking conversion path",
+                            "Low trust density on mobile",
+                            "Weak service-page structure for SEO",
+                          ].map((item) => (
+                            <div
+                              key={item}
+                              className="flex items-start gap-3 rounded-2xl border border-outline-variant/15 bg-surface/55 px-4 py-3 text-sm leading-6 text-on-surface"
+                            >
+                              <CheckCircle2
+                                className="mt-0.5 h-4 w-4 shrink-0 text-secondary"
+                                aria-hidden="true"
+                              />
+                              <span>{item}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </motion.div>
+                    ) : (
+                      <motion.div
+                        key="placeholder"
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="flex min-h-[260px] flex-col items-center justify-center gap-3 text-center text-sm text-on-surface-variant"
+                      >
+                        <div className="h-10 w-10 animate-spin-slow rounded-full border-2 border-outline-variant/40 border-t-secondary" />
+                        Waiting for strongest commercial signal...
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+
+                <div className="rounded-[20px] border border-outline-variant/15 bg-surface-container-low/75 p-5">
+                  <p className="text-xs uppercase tracking-[0.3em] text-on-surface-variant/70">
+                    Next action
                   </p>
-                </motion.div>
-              )}
-            </AnimatePresence>
+                  <h4 className="mt-3 text-2xl leading-tight text-on-background [font-family:var(--font-editorial-serif)]">
+                    Pitch website + online booking modernization
+                  </h4>
+                  <p className="mt-3 text-sm leading-6 text-on-surface-variant">
+                    LoexAI prepares a concrete narrative: why conversion is
+                    leaking, what the service package should include, and how
+                    the implementation scope can be framed.
+                  </p>
+                  <div className="mt-5 inline-flex items-center gap-2 rounded-full border border-secondary/30 bg-secondary/10 px-4 py-2 text-sm text-secondary">
+                    Generate outreach brief
+                    <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
     </section>
-  );
-}
-
-function ScoreCounter({
-  target,
-  active,
-}: {
-  target: number;
-  active: boolean;
-}) {
-  const reduceMotion = useReducedMotion();
-  const [value, setValue] = useState<number>(reduceMotion ? target : 0);
-
-  useEffect(() => {
-    if (reduceMotion) {
-      setValue(target);
-      return;
-    }
-    let frame = 0;
-    const steps = 18;
-    const interval = setInterval(() => {
-      frame += 1;
-      const next = Math.round((target * frame) / steps);
-      setValue(next >= target ? target : next);
-      if (frame >= steps) clearInterval(interval);
-    }, 24);
-    return () => clearInterval(interval);
-  }, [target, reduceMotion]);
-
-  return (
-    <span
-      className={`font-data-mono text-body-sm font-medium tabular-nums ${
-        active ? "text-secondary" : "text-on-surface"
-      }`}
-    >
-      {value}
-    </span>
   );
 }

@@ -76,6 +76,26 @@
     outline: var(--focus-ring-width) solid var(--focus-ring-color);
     outline-offset: var(--focus-ring-offset);
   }
+
+  /* Smooth scroll for in-page anchor navigation. */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Subtle vertical noise on the global background — adds film grain depth. */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.5;
+    background-image: radial-gradient(
+      circle at 50% 0%,
+      rgba(0, 102, 255, 0.06) 0%,
+      transparent 50%
+    );
+  }
 }
 
 @layer utilities {
@@ -88,5 +108,283 @@
   .border-hairline {
     border-width: 1px;
     border-color: var(--outline-variant);
+  }
+
+  .bg-grid-firm {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+    background-size: 72px 72px;
+    background-position: center center;
+  }
+
+  .bg-grid-fine {
+    background-image:
+      linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+    background-size: 36px 36px;
+  }
+
+  .bg-noise-subtle {
+    background-image:
+      radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.035), transparent 22%),
+      radial-gradient(circle at 80% 0%, rgba(174, 236, 255, 0.08), transparent 24%),
+      radial-gradient(circle at 50% 100%, rgba(179, 197, 255, 0.06), transparent 28%);
+  }
+
+  .panel-firm {
+    background:
+      linear-gradient(180deg, rgba(16, 32, 52, 0.92), rgba(11, 28, 48, 0.96));
+    border: 1px solid rgba(140, 144, 161, 0.22);
+    box-shadow:
+      0 24px 80px rgba(0, 0, 0, 0.35),
+      inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  }
+
+  /* Frosted glass panel — for nav, floating chips, modal-like surfaces. */
+  .panel-glass {
+    background: linear-gradient(
+      180deg,
+      rgba(13, 28, 48, 0.7),
+      rgba(8, 22, 40, 0.78)
+    );
+    border: 1px solid rgba(140, 144, 161, 0.18);
+    backdrop-filter: blur(14px) saturate(140%);
+    -webkit-backdrop-filter: blur(14px) saturate(140%);
+    box-shadow:
+      0 12px 40px rgba(0, 0, 0, 0.4),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  /* Soft halo that lifts the centerpiece of the hero / CTA. */
+  .panel-halo {
+    background:
+      radial-gradient(circle at 50% 0%, rgba(0, 217, 255, 0.18), transparent 55%),
+      linear-gradient(180deg, rgba(16, 32, 52, 0.92), rgba(11, 28, 48, 0.96));
+    border: 1px solid rgba(174, 236, 255, 0.2);
+    box-shadow:
+      0 32px 100px rgba(0, 0, 0, 0.5),
+      0 0 60px rgba(0, 217, 255, 0.12),
+      inset 0 1px 0 rgba(255, 255, 255, 0.05);
+  }
+
+  .text-balance {
+    text-wrap: balance;
+  }
+
+  .text-pretty {
+    text-wrap: pretty;
+  }
+
+  /* Gradient text helper — primary → secondary → primary. */
+  .text-gradient-brand {
+    background: linear-gradient(
+      120deg,
+      #b3c5ff 0%,
+      #aeecff 45%,
+      #00d9ff 70%,
+      #b3c5ff 100%
+    );
+    background-size: 200% 100%;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+
+  /* Slow shimmer across gradient text. */
+  .text-gradient-shimmer {
+    background: linear-gradient(
+      110deg,
+      rgba(211, 228, 254, 0.5) 0%,
+      #ffffff 45%,
+      #aeecff 55%,
+      rgba(211, 228, 254, 0.5) 100%
+    );
+    background-size: 250% 100%;
+    background-position: 200% 0;
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    animation: shimmer-slide 6s linear infinite;
+  }
+
+  /* Conic gradient ring used by BorderBeam fallback when JS is off. */
+  .ring-beam {
+    background: conic-gradient(
+      from 0deg,
+      transparent 0%,
+      rgba(174, 236, 255, 0.7) 10%,
+      rgba(179, 197, 255, 0.7) 30%,
+      transparent 50%,
+      transparent 100%
+    );
+  }
+
+  /* Hover-lift used on bento cards & pricing cards. */
+  .lift-hover {
+    transition:
+      transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+      border-color 0.3s ease;
+  }
+  .lift-hover:hover {
+    transform: translateY(-4px);
+    border-color: rgba(174, 236, 255, 0.35);
+    box-shadow:
+      0 28px 70px rgba(0, 0, 0, 0.45),
+      0 0 30px rgba(0, 217, 255, 0.08),
+      inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  }
+
+  /* Faint scanline used inside the dashboard preview chrome. */
+  .scanline {
+    background: linear-gradient(
+      180deg,
+      transparent 0%,
+      rgba(174, 236, 255, 0.06) 50%,
+      transparent 100%
+    );
+    background-size: 100% 6px;
+  }
+
+  /* Inner highlight band — used on top edge of polished panels. */
+  .edge-highlight::before {
+    content: "";
+    position: absolute;
+    inset-inline: 1.5rem;
+    top: 0;
+    height: 1px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      rgba(174, 236, 255, 0.55),
+      transparent
+    );
+  }
+
+  /* Marquee fade mask — soft edges. */
+  .mask-fade-x {
+    -webkit-mask-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      #000 12%,
+      #000 88%,
+      transparent 100%
+    );
+    mask-image: linear-gradient(
+      90deg,
+      transparent 0%,
+      #000 12%,
+      #000 88%,
+      transparent 100%
+    );
+  }
+}
+
+@layer components {
+  /* Centerpiece "shine button" — used on hero / CTA primary call-to-action. */
+  .btn-shine {
+    position: relative;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  .btn-shine::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+      110deg,
+      transparent 30%,
+      rgba(255, 255, 255, 0.35) 50%,
+      transparent 70%
+    );
+    transform: translateX(-120%);
+    transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+    pointer-events: none;
+  }
+  .btn-shine:hover::after {
+    transform: translateX(120%);
+  }
+}
+
+/* ─────────────────────────────────────────────────────────────────
+ * Animation keyframes — referenced by Tailwind animation tokens
+ * and by .text-gradient-shimmer / .ring-beam utilities above.
+ * ───────────────────────────────────────────────────────────────── */
+@keyframes shimmer-slide {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -50% 0;
+  }
+}
+
+@keyframes border-beam {
+  0% {
+    offset-distance: 0%;
+  }
+  100% {
+    offset-distance: 100%;
+  }
+}
+
+@keyframes marquee-x {
+  from {
+    transform: translateX(0%);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@keyframes aurora-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+    opacity: 0.55;
+  }
+  50% {
+    transform: translate3d(2%, -3%, 0) scale(1.08);
+    opacity: 0.75;
+  }
+}
+
+@keyframes pulse-soft {
+  0%,
+  100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.02);
+  }
+}
+
+@keyframes ping-soft {
+  0% {
+    transform: scale(1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes float-y {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes spin-slow {
+  to {
+    transform: rotate(360deg);
   }
 }

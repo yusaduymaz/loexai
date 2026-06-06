@@ -1,16 +1,4 @@
 import Link from "next/link";
-import {
-  BarChart3,
-  Bookmark,
-  FileText,
-  LayoutDashboard,
-  Megaphone,
-  Search,
-  Settings,
-  Sparkles,
-  Target,
-  Users,
-} from "lucide-react";
 
 import { CreditBadge } from "./CreditBadge";
 import { ComingSoonNavItem } from "./ComingSoonNavItem";
@@ -20,11 +8,10 @@ import type { AuthUser } from "@/types/domain";
 /**
  * Dashboard sidebar (Server Component).
  *
- * Phase 1 nav model (D-11):
- *   - 1 active item: Overview → `/dashboard`
- *   - 9 dimmed items: discovery, opportunities, business reports, campaigns,
- *     prompt studio, saved, crm, analytics, settings. Each shows a lock icon
- *     and "Coming soon" tooltip.
+ * Active items: Overview, Lead Discovery, Opportunities, Business Reports,
+ *   Prompt Studio, Saved Leads, CRM, Settings.
+ * Dimmed (intentionally MVP-out per CLAUDE.md §18): Campaigns (no automated
+ *   outreach in MVP), Analytics (advanced analytics deferred to v2).
  *
  * The bottom area shows the full-variant `<CreditBadge>` (D-08). Both the
  * sidebar credit pill and the header compact badge read the SAME server-
@@ -57,34 +44,42 @@ export function Sidebar({ user }: Props) {
       <nav className="flex-1 overflow-y-auto px-stack-sm pt-stack-sm">
         <ul className="flex flex-col gap-1">
           <li>
-            <NavItem href="/dashboard" icon={LayoutDashboard} label="Overview" />
+            <NavItem href="/dashboard" icon="layout-dashboard" label="Overview" />
           </li>
           <li>
-            <ComingSoonNavItem icon={Search} label="Lead Discovery" tooltip="Coming in Phase 2" />
+            <NavItem href="/dashboard/discovery" icon="search" label="Lead Discovery" />
           </li>
           <li>
-            <ComingSoonNavItem icon={Target} label="Opportunities" tooltip="Coming in Phase 3" />
+            <NavItem href="/dashboard/opportunities" icon="target" label="Opportunities" />
           </li>
           <li>
-            <ComingSoonNavItem icon={FileText} label="Business Reports" tooltip="Coming in Phase 4" />
+            <NavItem href="/dashboard/business" icon="file-text" label="Business Reports" />
           </li>
           <li>
-            <ComingSoonNavItem icon={Megaphone} label="Campaigns" tooltip="Coming in Phase 4" />
+            <ComingSoonNavItem
+              icon="megaphone"
+              label="Campaigns"
+              tooltip="Automated outreach is out of MVP scope"
+            />
           </li>
           <li>
-            <ComingSoonNavItem icon={Sparkles} label="Prompt Studio" tooltip="Coming in Phase 4" />
+            <NavItem href="/dashboard/prompt-studio" icon="sparkles" label="Prompt Studio" />
           </li>
           <li>
-            <ComingSoonNavItem icon={Bookmark} label="Saved Leads" tooltip="Coming in Phase 2" />
+            <NavItem href="/dashboard/saved" icon="bookmark" label="Saved Leads" />
           </li>
           <li>
-            <ComingSoonNavItem icon={Users} label="CRM" tooltip="Coming in Phase 5" />
+            <NavItem href="/dashboard/crm" icon="users" label="CRM" />
           </li>
           <li>
-            <ComingSoonNavItem icon={BarChart3} label="Analytics" tooltip="Coming in Phase 5" />
+            <ComingSoonNavItem
+              icon="bar-chart-3"
+              label="Analytics"
+              tooltip="Advanced analytics deferred to v2"
+            />
           </li>
           <li>
-            <ComingSoonNavItem icon={Settings} label="Settings" tooltip="Coming in Phase 5" />
+            <NavItem href="/dashboard/settings/billing" icon="settings" label="Settings" />
           </li>
         </ul>
       </nav>

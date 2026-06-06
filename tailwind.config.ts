@@ -107,11 +107,47 @@ const config: Config = {
           "0%": { transform: "translateX(-100%)" },
           "100%": { transform: "translateX(100%)" },
         },
+        "marquee-x": {
+          from: { transform: "translateX(0%)" },
+          to: { transform: "translateX(-50%)" },
+        },
+        "aurora-drift": {
+          "0%, 100%": {
+            transform: "translate3d(0, 0, 0) scale(1)",
+            opacity: "0.55",
+          },
+          "50%": {
+            transform: "translate3d(2%, -3%, 0) scale(1.08)",
+            opacity: "0.75",
+          },
+        },
+        "pulse-soft": {
+          "0%, 100%": { opacity: "0.85", transform: "scale(1)" },
+          "50%": { opacity: "1", transform: "scale(1.02)" },
+        },
+        "ping-soft": {
+          "0%": { transform: "scale(1)", opacity: "0.8" },
+          "100%": { transform: "scale(2.4)", opacity: "0" },
+        },
+        "float-y": {
+          "0%, 100%": { transform: "translateY(0)" },
+          "50%": { transform: "translateY(-8px)" },
+        },
+        "spin-slow": {
+          to: { transform: "rotate(360deg)" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         shimmer: "shimmer 2s infinite",
+        "marquee-x": "marquee-x 38s linear infinite",
+        "marquee-x-slow": "marquee-x 62s linear infinite",
+        "aurora-drift": "aurora-drift 14s ease-in-out infinite",
+        "pulse-soft": "pulse-soft 3.2s ease-in-out infinite",
+        "ping-soft": "ping-soft 2.4s ease-out infinite",
+        "float-y": "float-y 5s ease-in-out infinite",
+        "spin-slow": "spin-slow 16s linear infinite",
       },
     },
   },

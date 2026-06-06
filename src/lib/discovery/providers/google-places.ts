@@ -57,7 +57,9 @@ export class GooglePlacesProvider implements DiscoveryProvider {
       },
       body: JSON.stringify({
         textQuery: `${input.category} in ${input.location}`,
-        pageSize: 20,
+        // Places searchText accepts pageSize 1..20. Clamp here so any caller
+        // bug can't make us pay for results we will not show.
+        pageSize: Math.min(Math.max(input.maxResults ?? 20, 1), 20),
       }),
       signal: AbortSignal.timeout(this.config.timeoutMs),
     });

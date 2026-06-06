@@ -1,9 +1,9 @@
-import Link from "next/link";
 import { Target } from "lucide-react";
 
 import { EmptyState } from "@/components/dashboard/EmptyState";
+import { OpportunitiesView } from "@/components/opportunities/OpportunitiesView";
+import type { OpportunityCardData } from "@/components/opportunities/OpportunityCard";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { getCurrentUser } from "@/lib/auth/get-user";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,6 +17,7 @@ type OpportunityRow = {
   estimated_deal_value_max: number | null;
   estimated_deal_value_currency: "USD" | "EUR" | "TRY" | null;
   reasoning: string | null;
+  notes: string | null;
   businesses: {
     name: string;
     category: string | null;
@@ -25,25 +26,90 @@ type OpportunityRow = {
   } | null;
 };
 
-async function loadOpportunities(): Promise<OpportunityRow[]> {
-  const user = await getCurrentUser();
-  if (!user) return [];
+type ScanItemRow = {
+  business_id: string | null;
+  scan_jobs: {
+    id: string;
+    location: string | null;
+    category: string | null;
+    created_at: string;
+  } | null;
+};
 
+async function loadOpportunities(userId: string): Promise<OpportunityRow[]> {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("opportunities")
     .select(
-      "id, business_id, opportunity_score, priority, close_probability, estimated_deal_value_min, estimated_deal_value_max, estimated_deal_value_currency, reasoning, businesses(name, category, city, website)",
+      "id, business_id, opportunity_score, priority, close_probability, estimated_deal_value_min, estimated_deal_value_max, estimated_deal_value_currency, reasoning, notes, businesses!inner(name, category, city, website, user_id)",
     )
-    .eq("businesses.user_id", user.id)
+    .eq("businesses.user_id", userId)
     .order("opportunity_score", { ascending: false });
 
   if (error || !data) return [];
   return data as unknown as OpportunityRow[];
 }
 
+/**
+ * For each business_id, return the MOST RECENT scan that discovered it.
+ * A business can appear in multiple scans (place_id is unique per user, but
+ * the user can re-scan the same area). We surface the latest scan because it
+ * reflects the freshest context the user was working in.
+ */
+async function loadLatestScanByBusiness(
+  businessIds: string[],
+): Promise<Map<string, NonNullable<ScanItemRow["scan_jobs"]>>> {
+  if (businessIds.length === 0) return new Map();
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("scan_job_items")
+    .select("business_id, scan_jobs(id, location, category, created_at)")
+    .in("business_id", businessIds)
+    .order("created_at", { ascending: false, referencedTable: "scan_jobs" });
+
+  if (error || !data) return new Map();
+
+  const rows = data as unknown as ScanItemRow[];
+  const map = new Map<string, NonNullable<ScanItemRow["scan_jobs"]>>();
+  for (const row of rows) {
+    if (!row.business_id || !row.scan_jobs) continue;
+    // First hit wins because the query is ordered DESC on scan_jobs.created_at.
+    if (!map.has(row.business_id)) {
+      map.set(row.business_id, row.scan_jobs);
+    }
+  }
+  return map;
+}
+
 export default async function OpportunitiesPage() {
-  const opportunities = await loadOpportunities();
+  const user = await getCurrentUser();
+  if (!user) return null;
+
+  const opportunities = await loadOpportunities(user.id);
+  const scanByBusiness = await loadLatestScanByBusiness(
+    opportunities.map((o) => o.business_id),
+  );
+
+  const cards: OpportunityCardData[] = opportunities.map((o) => {
+    const scan = scanByBusiness.get(o.business_id) ?? null;
+    return {
+      id: o.id,
+      business_id: o.business_id,
+      opportunity_score: o.opportunity_score,
+      priority: o.priority,
+      close_probability: o.close_probability,
+      estimated_deal_value_min: o.estimated_deal_value_min,
+      estimated_deal_value_max: o.estimated_deal_value_max,
+      estimated_deal_value_currency: o.estimated_deal_value_currency,
+      reasoning: o.reasoning,
+      notes: o.notes,
+      business_name: o.businesses?.name ?? null,
+      business_category: o.businesses?.category ?? null,
+      business_city: o.businesses?.city ?? null,
+      scan: scan ? { id: scan.id, location: scan.location, category: scan.category } : null,
+    };
+  });
 
   return (
     <div className="mx-auto flex w-full max-w-6xl flex-col gap-stack-lg">
@@ -57,7 +123,7 @@ export default async function OpportunitiesPage() {
         </p>
       </div>
 
-      {opportunities.length === 0 ? (
+      {cards.length === 0 ? (
         <EmptyState
           icon={Target}
           title="No scored opportunities yet"
@@ -66,65 +132,8 @@ export default async function OpportunitiesPage() {
           ctaHref="/dashboard/discovery"
         />
       ) : (
-        <div className="grid gap-gutter">
-          {opportunities.map((opportunity) => (
-            <Card key={opportunity.id}>
-              <CardHeader className="flex flex-col gap-stack-sm md:flex-row md:items-start md:justify-between">
-                <div>
-                  <CardTitle>{opportunity.businesses?.name ?? "Unknown business"}</CardTitle>
-                  <CardDescription>
-                    {[opportunity.businesses?.category, opportunity.businesses?.city]
-                      .filter(Boolean)
-                      .join(" · ") || "Local business"}
-                  </CardDescription>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={priorityVariant(opportunity.priority)}>
-                    {opportunity.priority ?? "unscored"}
-                  </Badge>
-                  <span className="rounded-full bg-primary/15 px-3 py-1 text-sm font-semibold text-primary">
-                    {opportunity.opportunity_score ?? 0}/100
-                  </span>
-                </div>
-              </CardHeader>
-              <CardContent className="grid gap-stack-sm">
-                <p className="text-body-sm text-on-surface-variant">
-                  {opportunity.reasoning ?? "No reasoning recorded."}
-                </p>
-                <div className="flex flex-wrap gap-3 text-body-sm text-on-surface-variant">
-                  <span>
-                    Close probability:{" "}
-                    <strong className="text-on-surface">
-                      {Math.round((opportunity.close_probability ?? 0) * 100)}%
-                    </strong>
-                  </span>
-                  <span>
-                    Est. value:{" "}
-                    <strong className="text-on-surface">
-                      {opportunity.estimated_deal_value_currency ?? "USD"}{" "}
-                      {opportunity.estimated_deal_value_min ?? 0}-
-                      {opportunity.estimated_deal_value_max ?? 0}
-                    </strong>
-                  </span>
-                </div>
-                <Link
-                  href={`/dashboard/business/${opportunity.business_id}`}
-                  className="w-fit text-body-sm font-medium text-primary hover:underline"
-                >
-                  Open business report →
-                </Link>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <OpportunitiesView opportunities={cards} />
       )}
     </div>
   );
-}
-
-function priorityVariant(priority: OpportunityRow["priority"]) {
-  if (priority === "urgent" || priority === "high") return "danger";
-  if (priority === "medium") return "warning";
-  if (priority === "low") return "neutral";
-  return "neutral";
 }

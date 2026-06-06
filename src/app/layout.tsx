@@ -1,15 +1,24 @@
 import type { Metadata } from "next";
 import { ClerkProvider } from "@clerk/nextjs";
 import { GeistSans } from "geist/font/sans";
-import { JetBrains_Mono } from "next/font/google";
+import { Cormorant_Garamond, JetBrains_Mono } from "next/font/google";
+import { Toaster } from "sonner";
 import { getPublicAppUrl } from "@/lib/config/public";
 import { reportStartupDiagnostics } from "@/lib/observability/startup";
+import { TopProgressBar } from "@/components/motion/TopProgressBar";
 import { PostHogProvider } from "./providers";
 import "./globals.css";
 
 const jetbrainsMono = JetBrains_Mono({
   subsets: ["latin"],
   variable: "--font-jetbrains-mono",
+  display: "swap",
+});
+
+const editorialSerif = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-editorial-serif",
   display: "swap",
 });
 
@@ -30,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="tr"
-      className={`dark ${GeistSans.variable} ${jetbrainsMono.variable}`}
+      className={`dark ${GeistSans.variable} ${jetbrainsMono.variable} ${editorialSerif.variable}`}
     >
       <head>
         {/*
@@ -45,15 +54,34 @@ export default function RootLayout({
           rel="stylesheet"
           href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              if (typeof window !== 'undefined' && 'serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(registrations) {
+                  for (var i = 0; i < registrations.length; i++) {
+                    registrations[i].unregister();
+                  }
+                });
+              }
+            `,
+          }}
+        />
       </head>
       <body className="font-sans bg-background text-on-background antialiased min-h-screen">
-        <ClerkProvider
-          signInUrl="/login"
-          signUpUrl="/register"
-          afterSignInUrl="/dashboard"
-          afterSignUpUrl="/dashboard"
-        >
+        <TopProgressBar />
+        <ClerkProvider>
           <PostHogProvider>{children}</PostHogProvider>
+          <Toaster
+            position="top-right"
+            theme="dark"
+            richColors
+            closeButton
+            toastOptions={{
+              className:
+                "!bg-surface-container !border-outline-variant/40 !text-on-surface",
+            }}
+          />
         </ClerkProvider>
       </body>
     </html>

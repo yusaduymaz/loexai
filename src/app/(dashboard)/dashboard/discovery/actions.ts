@@ -1,9 +1,11 @@
 "use server";
 
+import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { z } from "zod";
 
 import { getCurrentUser } from "@/lib/auth/get-user";
+import { getPlanLimits } from "@/lib/billing/plan";
 import { createDiscoveryProvider } from "@/lib/discovery/provider";
 import type { RawBusiness } from "@/lib/discovery/types";
 import { runDeterministicIntelligenceForBusiness } from "@/lib/intelligence/pipeline";
@@ -11,13 +13,28 @@ import { logger } from "@/lib/observability/logger";
 import { createClient } from "@/lib/supabase/server";
 import type { Json, TablesInsert } from "@/types/database";
 
+export type DiscoveryFormState =
+  | { status: "idle" }
+  | {
+      status: "error";
+      message: string;
+      fieldErrors?: Partial<Record<"location" | "category" | "radiusM", string>>;
+    };
+
 const discoveryFormSchema = z.object({
-  location: z.string().trim().min(2).max(120),
-  category: z.string().trim().min(2).max(80),
-  radiusM: z.coerce.number().int().min(500).max(50000),
+  location: z.string().trim().min(2, "Location must be at least 2 characters").max(120),
+  category: z.string().trim().min(2, "Category must be at least 2 characters").max(80),
+  radiusM: z.coerce
+    .number()
+    .int("Radius must be a whole number")
+    .min(500, "Minimum 500 meters")
+    .max(50000, "Maximum 50000 meters"),
 });
 
-export async function launchDiscoveryScan(formData: FormData) {
+export async function launchDiscoveryScan(
+  _prev: DiscoveryFormState,
+  formData: FormData,
+): Promise<DiscoveryFormState> {
   const parsed = discoveryFormSchema.safeParse({
     location: formData.get("location"),
     category: formData.get("category"),
@@ -25,7 +42,19 @@ export async function launchDiscoveryScan(formData: FormData) {
   });
 
   if (!parsed.success) {
-    redirectWithMessage("error", "Scan request is invalid. Check location, category, and radius.");
+    const fieldErrors: DiscoveryFormState extends { fieldErrors?: infer F } ? F : never =
+      {} as never;
+    for (const issue of parsed.error.issues) {
+      const key = issue.path[0];
+      if (key === "location" || key === "category" || key === "radiusM") {
+        (fieldErrors as Record<string, string>)[key] = issue.message;
+      }
+    }
+    return {
+      status: "error",
+      message: "Scan request is invalid. Check location, category, and radius.",
+      fieldErrors,
+    };
   }
 
   const user = await getCurrentUser();
@@ -33,12 +62,29 @@ export async function launchDiscoveryScan(formData: FormData) {
     redirect("/login");
   }
 
-  if (user.credits <= 0) {
-    redirectWithMessage("error", "You need credits before launching a discovery scan.");
-  }
-
   const supabase = await createClient();
   const input = parsed.data;
+  const limits = getPlanLimits();
+
+  // Atomically reserve a scan slot for the current calendar month. The RPC
+  // lazily resets the counter on month rollover; admins bypass the cap.
+  // Reserving BEFORE the scan job row keeps the cap honest under concurrency.
+  const { data: reservedCount, error: reserveError } = await supabase.rpc(
+    "reserve_scan_slot",
+    { p_user_id: user.id, p_cap: limits.monthlyScans },
+  );
+
+  if (reserveError) {
+    logger.error("reserve_scan_slot failed", reserveError, { userId: user.id });
+    return { status: "error", message: "Could not check your scan quota." };
+  }
+
+  if (reservedCount === -1) {
+    return {
+      status: "error",
+      message: `Free plan limit reached: ${limits.monthlyScans} scans per month. Resets on the 1st.`,
+    };
+  }
 
   const { data: job, error: jobError } = await supabase
     .from("scan_jobs")
@@ -54,13 +100,19 @@ export async function launchDiscoveryScan(formData: FormData) {
     .single();
 
   if (jobError || !job) {
+    // The reservation went through but the job row failed. Refund so the user
+    // doesn't lose a scan slot to an infrastructure error.
+    await supabase.rpc("release_scan_slot", { p_user_id: user.id });
     logger.error("Failed to create scan job", jobError, { userId: user.id });
-    redirectWithMessage("error", "Could not create the scan job.");
+    return { status: "error", message: "Could not create the scan job." };
   }
 
   try {
     const provider = createDiscoveryProvider();
-    const results = await provider.search(input);
+    const results = await provider.search({
+      ...input,
+      maxResults: limits.maxLeadsPerScan,
+    });
     const outcome = await persistDiscoveryResults({
       userId: user.id,
       scanJobId: job.id,
@@ -77,10 +129,12 @@ export async function launchDiscoveryScan(formData: FormData) {
         completed_at: new Date().toISOString(),
       })
       .eq("id", job.id);
-
-    redirect(`/dashboard/discovery?job=${job.id}&found=${outcome.foundCount}`);
   } catch (error) {
     logger.error("Discovery scan failed", error, { userId: user.id, scanJobId: job.id });
+
+    // Refund the reserved slot: the provider failed before producing leads,
+    // so the user shouldn't lose a monthly quota to a transient infra error.
+    await supabase.rpc("release_scan_slot", { p_user_id: user.id });
 
     await supabase
       .from("scan_jobs")
@@ -92,40 +146,47 @@ export async function launchDiscoveryScan(formData: FormData) {
       })
       .eq("id", job.id);
 
-    redirectWithMessage(
-      "error",
-      error instanceof Error ? error.message : "Discovery provider failed.",
-    );
+    return {
+      status: "error",
+      message: error instanceof Error ? error.message : "Discovery provider failed.",
+    };
   }
+
+  revalidatePath("/dashboard/discovery");
+  redirect(`/dashboard/discovery/${job.id}`);
 }
 
-export async function analyzeScanJob(formData: FormData) {
-  const scanJobId = z.string().uuid().safeParse(formData.get("scanJobId"));
-  if (!scanJobId.success) {
-    redirectWithMessage("error", "Invalid scan job.");
+export type AnalyzeJobResult =
+  | { status: "ok"; analyzed: number; failed: number }
+  | { status: "error"; message: string };
+
+export async function analyzeScanJob(scanJobId: string): Promise<AnalyzeJobResult> {
+  const parsed = z.string().uuid().safeParse(scanJobId);
+  if (!parsed.success) {
+    return { status: "error", message: "Invalid scan job." };
   }
 
   const user = await getCurrentUser();
   if (!user) {
-    redirect("/login");
+    return { status: "error", message: "Not signed in." };
   }
 
   const supabase = await createClient();
   const { data: job, error: jobError } = await supabase
     .from("scan_jobs")
     .select("id")
-    .eq("id", scanJobId.data)
+    .eq("id", parsed.data)
     .eq("user_id", user.id)
     .maybeSingle();
 
   if (jobError || !job) {
-    redirectWithMessage("error", "Scan job was not found.");
+    return { status: "error", message: "Scan job was not found." };
   }
 
   const { data: items, error: itemsError } = await supabase
     .from("scan_job_items")
     .select("id, business_id, scan_job_id")
-    .eq("scan_job_id", scanJobId.data)
+    .eq("scan_job_id", parsed.data)
     .in("status", ["queued", "discovered", "failed"])
     .not("business_id", "is", null)
     .limit(10);
@@ -133,9 +194,9 @@ export async function analyzeScanJob(formData: FormData) {
   if (itemsError) {
     logger.error("Failed to load scan job items for analysis", itemsError, {
       userId: user.id,
-      scanJobId: scanJobId.data,
+      scanJobId: parsed.data,
     });
-    redirectWithMessage("error", "Could not load scan items for analysis.");
+    return { status: "error", message: "Could not load scan items for analysis." };
   }
 
   let analyzed = 0;
@@ -162,7 +223,7 @@ export async function analyzeScanJob(formData: FormData) {
       failed += 1;
       logger.error("Deterministic analysis failed", error, {
         userId: user.id,
-        scanJobId: scanJobId.data,
+        scanJobId: parsed.data,
         scanJobItemId: item.id,
         businessId: item.business_id,
       });
@@ -180,13 +241,13 @@ export async function analyzeScanJob(formData: FormData) {
   const { count: completedCount } = await supabase
     .from("scan_job_items")
     .select("*", { count: "exact", head: true })
-    .eq("scan_job_id", scanJobId.data)
+    .eq("scan_job_id", parsed.data)
     .eq("status", "completed");
 
   const { count: failedCount } = await supabase
     .from("scan_job_items")
     .select("*", { count: "exact", head: true })
-    .eq("scan_job_id", scanJobId.data)
+    .eq("scan_job_id", parsed.data)
     .eq("status", "failed");
 
   await supabase
@@ -196,11 +257,12 @@ export async function analyzeScanJob(formData: FormData) {
       error_count: failedCount ?? failed,
       status: failed > 0 ? "partial" : "completed",
     })
-    .eq("id", scanJobId.data);
+    .eq("id", parsed.data);
 
-  redirect(
-    `/dashboard/discovery?analyzed=${analyzed}&failed=${failed}&job=${scanJobId.data}`,
-  );
+  revalidatePath("/dashboard/discovery");
+  revalidatePath(`/dashboard/discovery/${parsed.data}`);
+
+  return { status: "ok", analyzed, failed };
 }
 
 async function persistDiscoveryResults({
@@ -299,10 +361,6 @@ async function upsertBusiness(userId: string, result: RawBusiness) {
 
   if (error) throw error;
   return data.id;
-}
-
-function redirectWithMessage(type: "error" | "success", message: string): never {
-  redirect(`/dashboard/discovery?${type}=${encodeURIComponent(message)}`);
 }
 
 function toJson(value: unknown): Json {

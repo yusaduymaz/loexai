@@ -36,6 +36,11 @@ export type Database = {
           email: string;
           role: "user" | "admin";
           credits: number;
+          plan: "free" | "pro" | "agency";
+          subscription_credits: number;
+          topup_credits: number;
+          monthly_scan_count: number;
+          scan_count_period_start: string;
           created_at: string;
         };
         Insert: {
@@ -44,6 +49,11 @@ export type Database = {
           email: string;
           role?: "user" | "admin";
           credits?: number;
+          plan?: "free" | "pro" | "agency";
+          subscription_credits?: number;
+          topup_credits?: number;
+          monthly_scan_count?: number;
+          scan_count_period_start?: string;
           created_at?: string;
         };
         Update: {
@@ -52,6 +62,11 @@ export type Database = {
           email?: string;
           role?: "user" | "admin";
           credits?: number;
+          plan?: "free" | "pro" | "agency";
+          subscription_credits?: number;
+          topup_credits?: number;
+          monthly_scan_count?: number;
+          scan_count_period_start?: string;
           created_at?: string;
         };
         Relationships: [];
@@ -216,6 +231,7 @@ export type Database = {
           estimated_deal_value_max: number | null;
           estimated_deal_value_currency: "USD" | "EUR" | "TRY" | null;
           reasoning: string | null;
+          notes: string | null;
           scoring_formula_version: string;
           score_breakdown: Json;
           scored_at: string | null;
@@ -240,6 +256,7 @@ export type Database = {
           estimated_deal_value_max?: number | null;
           estimated_deal_value_currency?: "USD" | "EUR" | "TRY" | null;
           reasoning?: string | null;
+          notes?: string | null;
           scoring_formula_version?: string;
           score_breakdown?: Json;
           scored_at?: string | null;
@@ -678,6 +695,14 @@ export type Database = {
       handle_new_user: {
         Args: Record<string, never>;
         Returns: unknown;
+      };
+      release_scan_slot: {
+        Args: { p_user_id: string };
+        Returns: number;
+      };
+      reserve_scan_slot: {
+        Args: { p_user_id: string; p_cap: number };
+        Returns: number;
       };
       tg_set_updated_at: {
         Args: Record<string, never>;

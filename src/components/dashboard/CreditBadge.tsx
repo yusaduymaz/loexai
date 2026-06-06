@@ -71,19 +71,18 @@ export function CreditBadge({ credits, variant, className }: Props) {
       </div>
       {credits === 0 ? (
         <Link
-          href="/pricing"
+          href="/dashboard/settings/billing"
           className="text-xs font-medium text-primary underline-offset-2 hover:underline"
         >
           Upgrade plan →
         </Link>
       ) : (
-        <span
-          aria-disabled="true"
-          className="cursor-not-allowed text-xs text-on-surface-variant/70"
-          title="Available in Phase 5"
+        <Link
+          href="/dashboard/settings/billing"
+          className="text-xs font-medium text-primary underline-offset-2 hover:underline"
         >
-          Need more? Upgrade
-        </span>
+          Need more? Upgrade →
+        </Link>
       )}
     </div>
   );

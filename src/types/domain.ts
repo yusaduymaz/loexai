@@ -13,4 +13,8 @@ export type AuthUser = {
   email: string;
   role: "user" | "admin";
   credits: number;
+  plan: "free" | "pro" | "agency";
+  subscriptionCredits: number;
+  topupCredits: number;
 };
+

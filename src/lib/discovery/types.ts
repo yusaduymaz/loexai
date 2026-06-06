@@ -17,6 +17,12 @@ export interface DiscoveryInput {
   category: string;
   /** Search radius in meters. Provider clamps this to its own max. */
   radiusM: number;
+  /**
+   * Max results to return. Set by the caller (Server Action) based on the
+   * user's plan — providers MUST clamp to their own ceiling. The plan cap is
+   * enforced upstream; this is the wire-level limit handed to the API.
+   */
+  maxResults?: number;
 }
 
 /**

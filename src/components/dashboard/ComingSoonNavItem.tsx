@@ -1,7 +1,17 @@
 "use client";
 
-import { Lock } from "lucide-react";
-import type { LucideIcon } from "lucide-react";
+import {
+  BarChart3,
+  Bookmark,
+  FileText,
+  Lock,
+  Megaphone,
+  Search,
+  Settings,
+  Sparkles,
+  Target,
+  Users,
+} from "lucide-react";
 
 import {
   Tooltip,
@@ -20,7 +30,16 @@ import { cn } from "@/lib/utils";
  * right, "Coming soon" tooltip on hover/focus.
  */
 type Props = {
-  icon: LucideIcon;
+  icon:
+    | "search"
+    | "target"
+    | "file-text"
+    | "megaphone"
+    | "sparkles"
+    | "bookmark"
+    | "users"
+    | "bar-chart-3"
+    | "settings";
   label: string;
   /**
    * Optional tooltip override — used for "Available in Phase 2" style hints.
@@ -28,7 +47,21 @@ type Props = {
   tooltip?: string;
 };
 
-export function ComingSoonNavItem({ icon: Icon, label, tooltip = "Coming soon" }: Props) {
+const ICONS = {
+  search: Search,
+  target: Target,
+  "file-text": FileText,
+  megaphone: Megaphone,
+  sparkles: Sparkles,
+  bookmark: Bookmark,
+  users: Users,
+  "bar-chart-3": BarChart3,
+  settings: Settings,
+} as const;
+
+export function ComingSoonNavItem({ icon, label, tooltip = "Coming soon" }: Props) {
+  const Icon = ICONS[icon];
+
   return (
     <TooltipProvider delayDuration={150}>
       <Tooltip>
